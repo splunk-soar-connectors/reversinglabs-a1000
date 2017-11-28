@@ -36,8 +36,6 @@ import re
 import magic
 import shutil
 
-requests.packages.urllib3.disable_warnings()
-
 
 def __unicode__(self):
    return unicode(self.some_field) or u''
@@ -183,7 +181,6 @@ class A1000Connector(BaseConnector):
         print "A1000 link:" + response1['a1000_link']
         return response1
 
-
     def _parse_error(self, response, result, error_desc):
 
         status_code = response.status_code
@@ -203,11 +200,17 @@ class A1000Connector(BaseConnector):
 
         return result.set_status(phantom.APP_ERROR, A1000_ERR_REST_API.format(status_code=status_code, detail=detail))
 
-    def _make_rest_call(self, endpoint, result, error_desc, method="get", params={}, data={}, filein=None, parse_response=True, additional_succ_codes={}):
+    def _make_rest_call(self, endpoint, result, error_desc, method="get", params={}, data={}, filein=None, files=None, parse_response=True, additional_succ_codes={}):
 
         url = "{0}{1}".format(self._base_url, endpoint)
 
         config = self.get_config()
+
+        if (files is None):
+            files = dict()
+
+        if (filein is not None):
+            files = {'file': filein}
 
         # request_func = getattr(self._req_sess, method)
 
@@ -216,17 +219,15 @@ class A1000Connector(BaseConnector):
 
         if method == 'post':
             try:
-                # r = request_func(url, params=params, data=data, files=files, verify=config[phantom.APP_JSON_VERIFY])
                 r = requests.post(url,
                                   data=data,
-                                  files={'file': filein},
+                                  files=files,
                                   verify=config[phantom.APP_JSON_VERIFY],
                                   headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY]})
             except Exception as e:
                 return (result.set_status(phantom.APP_ERROR, "REST Api to server failed", e), None)
         else:
             try:
-                # r = request_func(url, params=params, data=data, files=files, verify=config[phantom.APP_JSON_VERIFY])
                 url = "{0}{1}{2}".format(url, data['hash'], '/ticore/')
                 result.add_debug_data({'r_text': url + ' ' + config[A1000_JSON_API_KEY]})
                 r = requests.get(url,
@@ -677,8 +678,8 @@ class A1000Connector(BaseConnector):
             ret_val = self._test_connectivity(param)
         return ret_val
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
 
     import sys
 

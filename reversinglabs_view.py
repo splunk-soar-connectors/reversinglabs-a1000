@@ -11,8 +11,6 @@
 #
 # --
 
-from phantom.json_keys import *
-
 
 def file_reputation(provides, all_results, context):
 

@@ -10,7 +10,7 @@
     "product_vendor": "ReversingLabs",
     "product_name": "A1000",
     "product_version_regex": ".*",
-    "min_phantom_version": "1.2.236",
+    "min_phantom_version": "3.0.251",
     "publisher": "ReversingLabs",
     "consolidate_widgets": true,
     "logo": "rl.png",
@@ -95,6 +95,16 @@
 	  "title": "A1000 Upload Status"
         },
         "output": [
+          {
+            "data_path": "action_result.parameter.vault_id",
+            "data_type": "string",
+	    "contains": ["pe file", "pdf", "flash", "apk", "jar", "doc", "xls", "ppt"]
+          },
+          {
+            "data_path": "action_result.parameter.file_name",
+            "data_type": "string",
+            "contains": ["file name"]
+          },
           {
             "data_path": "action_result.data.*.task_info.report.*.sha256",
             "data_type": "string"
@@ -226,6 +236,14 @@
           },
           {
             "data_path": "action_result.data.*.a1000_link",
+            "data_type": "string"
+          },
+          {
+            "data_path": "action_result.status",
+            "data_type": "string"
+          },
+          {
+            "data_path": "action_result.message",
             "data_type": "string"
           }
         ],
