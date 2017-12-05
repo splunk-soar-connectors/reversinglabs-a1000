@@ -31,7 +31,7 @@
             "default": true
         },
         "api_key": {
-            "data_type": "string",
+            "data_type": "password",
             "description": "API Key",
             "order": 2,
             "required": true
@@ -81,7 +81,8 @@
                         "jar",
                         "doc",
                         "xls",
-                        "ppt"
+                        "ppt",
+                        "vault id"
                     ],
                     "required": true,
                     "primary": true
@@ -343,6 +344,10 @@
                     "data_type": "string"
                 },
                 {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
                     "data_path": "action_result.parameter.vault_id",
                     "data_type": "string",
                     "contains": [
@@ -353,7 +358,8 @@
                         "jar",
                         "doc",
                         "xls",
-                        "ppt"
+                        "ppt",
+                        "vault id"
                     ]
                 },
                 {
