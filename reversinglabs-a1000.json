@@ -1,7 +1,7 @@
 {
     "appid": "8a88c130-adec-42a0-bfbe-5ac65ac48ca9",
     "name": "A1000",
-    "description": "This app supports using ReversingLabs Advanced File Anaysis to 'detonate file' on the A1000 Advanced Malware Analysis Appliance",
+    "description": "This app integrates with the ReversingLabs A1000 Advanced Malware Analysis Appliance to implement investigative actions",
     "type": "sandbox",
     "main_module": "rla1000_connector.pyc",
     "app_version": "1.1.5",
@@ -333,6 +333,35 @@
                 {
                     "data_path": "action_result.data.*.a1000_link",
                     "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.vault_id",
+                    "data_type": "string",
+                    "contains": [
+                        "pe file",
+                        "pdf",
+                        "flash",
+                        "apk",
+                        "jar",
+                        "doc",
+                        "xls",
+                        "ppt"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.file_name",
+                    "data_type": "string",
+                    "contains": [
+                        "file name"
+                    ]
                 }
             ],
             "versions": "EQ(*)"
