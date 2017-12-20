@@ -45,10 +45,7 @@ class A1000Connector(BaseConnector):
 
     # The actions supported by this connector
     ACTION_ID_DETONATE_FILE = "detonate_file"
-    ACTION_ID_DETONATE_URL = "detonate_url"
     ACTION_ID_GET_REPORT = "get_report"
-    ACTION_ID_GET_SAMPLE = "get_sample"
-    ACTION_ID_GET_PCAP = "get_pcap"
     ACTION_ID_TEST_ASSET_CONNECTIVITY = 'test_asset_connectivity'
 
     MAGIC_FORMATS = [
@@ -83,16 +80,6 @@ class A1000Connector(BaseConnector):
             '401': 'API key invalid',
             '403': 'Permission Denied',
             '404': 'The sample was not found',
-            '405': 'HTTP method Not Allowed',
-            '419': 'Request sample quota exceeded',
-            '420': 'Insufficient arguments',
-            '421': 'Invalid arguments',
-            '500': 'Internal error'}
-
-    GET_PCAP_ERROR_DESC = {
-            '401': 'API key invalid',
-            '403': 'Permission Denied',
-            '404': 'The pcap was not found',
             '405': 'HTTP method Not Allowed',
             '419': 'Request sample quota exceeded',
             '420': 'Insufficient arguments',
@@ -468,7 +455,7 @@ class A1000Connector(BaseConnector):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        task_id = param[A1000_JSON_TASK_ID]
+        task_id = param[A1000_JSON_VAULT_ID]
 
         # Now poll for the result
         ret_val, response = self._poll_task_status(task_id, action_result)
@@ -481,9 +468,9 @@ class A1000Connector(BaseConnector):
         # The next part is the report
         data.update(response)
 
-        malware = data.get('file_info', {}).get('malware', 'no')
+        #malware = data.get('file_info', {}).get('malware', 'no')
 
-        action_result.update_summary({A1000_JSON_MALWARE: malware})
+        #action_result.update_summary({A1000_JSON_MALWARE: malware})
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -545,24 +532,6 @@ class A1000Connector(BaseConnector):
 
         return action_result.get_status()
 
-    def _get_sample(self, param):
-
-        action_result = self.add_action_result(ActionResult(dict(param)))
-
-        sample_hash = param[A1000_JSON_HASH]
-
-        self.save_progress('Getting file from A1000')
-
-        ret_val, response = self._make_rest_call(
-            '/get/sample', action_result, self.GET_SAMPLE_ERROR_DESC,
-            method='post', data={'hash': sample_hash},
-            parse_response=False)
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        return self._save_file_to_vault(action_result, response, sample_hash)
-
     def _get_platform_id(self, param):
 
         platform = param.get(A1000_JSON_PLATFORM)
@@ -577,86 +546,12 @@ class A1000Connector(BaseConnector):
 
         return self.PLATFORM_ID_MAPPING[platform]
 
-    def _get_pcap(self, param):
-
-        action_result = self.add_action_result(ActionResult(dict(param)))
-
-        sample_hash = param[A1000_JSON_HASH]
-        rest_data = {'hash': sample_hash}
-
-        platform_id = self._get_platform_id(param)
-
-        if (platform_id):
-            rest_data.update({'platform': platform_id})
-
-        self.save_progress('Getting pcap from A1000')
-
-        ret_val, response = self._make_rest_call(
-            '/get/pcap', action_result, self.GET_PCAP_ERROR_DESC, method='post',
-            data=rest_data, parse_response=False)
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        return self._save_file_to_vault(action_result, response, sample_hash)
-
     def validate_parameters(self, param):
         """Do our own validations instead of BaseConnector doing it for us"""
 
         action = self.get_action_identifier()
 
-        if (action == self.ACTION_ID_DETONATE_URL):
-
-            # add an http if not present
-            url = param[A1000_JSON_URL]
-            if ('://' not in url):
-                url = "http://{0}".format(url)
-
-            if (not ph_utils.is_url(url)):
-                return phantom.APP_ERROR
-
-            param[A1000_JSON_URL] = url
-
         return phantom.APP_SUCCESS
-
-    def _detonate_url(self, param):
-
-        action_result = self.add_action_result(ActionResult(dict(param)))
-
-        # add an http if not present
-        url = param[A1000_JSON_URL]
-
-        self.save_progress('Detonating URL')
-
-        ret_val, response = self._make_rest_call(
-            '/submit/link', action_result, self.FILE_UPLOAD_ERROR_DESC,
-            method='post', files={'link': ('', url)})
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        data = action_result.add_data({})
-
-        # The first part is the uploaded file info
-        data.update(response)
-
-        # get the sha256
-        task_id = response.get('submit-link-info', {}).get('sha256')
-
-        # Now poll for the result
-        ret_val, response = self._poll_task_status(task_id, action_result)
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        # The next part is the report
-        data.update(response)
-
-        malware = data.get('file_info', {}).get('malware', 'no')
-
-        action_result.update_summary({A1000_JSON_MALWARE: malware})
-
-        return action_result.set_status(phantom.APP_SUCCESS)
 
     def _get_vault_file_sha256(self, vault_id, action_result):
 
@@ -768,14 +663,8 @@ class A1000Connector(BaseConnector):
 
         if (action_id == self.ACTION_ID_DETONATE_FILE):
             ret_val = self._detonate_file(param)
-        elif (action_id == self.ACTION_ID_DETONATE_URL):
-            ret_val = self._detonate_url(param)
         elif (action_id == self.ACTION_ID_GET_REPORT):
             ret_val = self._get_report(param)
-        elif (action_id == self.ACTION_ID_GET_SAMPLE):
-            ret_val = self._get_sample(param)
-        elif (action_id == self.ACTION_ID_GET_PCAP):
-            ret_val = self._get_pcap(param)
         elif (action_id == self.ACTION_ID_TEST_ASSET_CONNECTIVITY):
             ret_val = self._test_connectivity(param)
         return ret_val
