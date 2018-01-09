@@ -17,7 +17,7 @@ from phantom.app import BaseConnector
 from phantom.app import ActionResult
 try:
     from phantom.vault import Vault
-except:
+except BaseException:
     import phantom.vault as Vault
 
 import phantom.utils as ph_utils
@@ -38,17 +38,14 @@ import shutil
 
 
 def __unicode__(self):
-   return unicode(self.some_field) or u''
+    return unicode(self.some_field) or u''
 
 
 class A1000Connector(BaseConnector):
 
     # The actions supported by this connector
     ACTION_ID_DETONATE_FILE = "detonate_file"
-    ACTION_ID_DETONATE_URL = "detonate_url"
     ACTION_ID_GET_REPORT = "get_report"
-    ACTION_ID_GET_SAMPLE = "get_sample"
-    ACTION_ID_GET_PCAP = "get_pcap"
     ACTION_ID_TEST_ASSET_CONNECTIVITY = 'test_asset_connectivity'
 
     MAGIC_FORMATS = [
@@ -83,16 +80,6 @@ class A1000Connector(BaseConnector):
             '401': 'API key invalid',
             '403': 'Permission Denied',
             '404': 'The sample was not found',
-            '405': 'HTTP method Not Allowed',
-            '419': 'Request sample quota exceeded',
-            '420': 'Insufficient arguments',
-            '421': 'Invalid arguments',
-            '500': 'Internal error'}
-
-    GET_PCAP_ERROR_DESC = {
-            '401': 'API key invalid',
-            '403': 'Permission Denied',
-            '404': 'The pcap was not found',
             '405': 'HTTP method Not Allowed',
             '419': 'Request sample quota exceeded',
             '420': 'Insufficient arguments',
@@ -134,7 +121,7 @@ class A1000Connector(BaseConnector):
 
         reports = {}
 
-        if (type(reports) != list):
+        if (not isinstance(reports, list)):
             reports = [response]
 
         # pprint.pprint(response)
@@ -145,25 +132,29 @@ class A1000Connector(BaseConnector):
         for report in reports:
             try:
                 report['temp_indicators'] = []
-                report['application'] = self._normalize_children_into_list(response.get('application'))
+                report['application'] = self._normalize_children_into_list(
+                    response.get('application'))
                 for i in response.get('indicators'):
-                    report['temp_indicators'].append(self._normalize_children_into_list(i))
+                    report['temp_indicators'].append(
+                        self._normalize_children_into_list(i))
                 report['indicators'] = report['temp_indicators']
-            except:
+            except BaseException:
                 pass
             try:
                 report['temp_indicators'] = []
                 for i in response.get('interesting_strings'):
-                    report['temp_indicators'].append(self._normalize_children_into_list(i))
+                    report['temp_indicators'].append(
+                        self._normalize_children_into_list(i))
                 report['interesting_strings'] = report['temp_indicators']
-            except:
+            except BaseException:
                 pass
             try:
                 report['temp_indicators'] = []
                 for i in response.get('certificate').get('certificates'):
-                    report['temp_indicators'].append(self._normalize_children_into_list(i))
+                    report['temp_indicators'].append(
+                        self._normalize_children_into_list(i))
                 report['certificate'] = report['temp_indicators']
-            except:
+            except BaseException:
                 pass
             try:
                 report['temp_indicators'] = []
@@ -171,13 +162,16 @@ class A1000Connector(BaseConnector):
                 sum_entries = response.get('summary', {}).get('entry')
                 if (sum_entries):
                     for i, entry in enumerate(sum_entries):
-                        if (type(entry) != dict):
-                            sum_entries[i] = {'#text': entry, '@details': 'N/A', '@score': 'N/A', '@id': 'N/A'}
-            except:
+                        if (not isinstance(entry, dict)):
+                            sum_entries[i] = {
+                                '#text': entry, '@details': 'N/A',
+                                '@score': 'N/A', '@id': 'N/A'}
+            except BaseException:
                 pass
 
         # pprint.pprint(response)
-        response1['a1000_link'] = "{0}{1}".format(self._base_url, "?q=" + data['hash'])
+        response1['a1000_link'] = "{0}{1}".format(
+            self._base_url, "?q=" + data['hash'])
         print "A1000 link:" + response1['a1000_link']
         return response1
 
@@ -187,20 +181,43 @@ class A1000Connector(BaseConnector):
         detail = response.text
 
         if (detail):
-            return result.set_status(phantom.APP_ERROR, A1000_ERR_REST_API.format(status_code=status_code, detail=json.loads(detail)['message']))
+            return result.set_status(
+                phantom.APP_ERROR,
+                A1000_ERR_REST_API.format(
+                    status_code=status_code,
+                    detail=json.loads(detail)['message']))
 
         if (not error_desc):
-           return result.set_status(phantom.APP_ERROR, A1000_ERR_REST_API.format(status_code=status_code, detail='N/A'))
+            return result.set_status(
+                phantom.APP_ERROR, A1000_ERR_REST_API.format(
+                    status_code=status_code, detail='N/A'))
 
         detail = error_desc.get(str(status_code))
 
         if (not detail):
             # no detail
-            return result.set_status(phantom.APP_ERROR, A1000_ERR_REST_API.format(status_code=status_code, detail='N/A'))
+            return result.set_status(
+                phantom.APP_ERROR, A1000_ERR_REST_API.format(
+                    status_code=status_code, detail='N/A'))
 
-        return result.set_status(phantom.APP_ERROR, A1000_ERR_REST_API.format(status_code=status_code, detail=detail))
+        return result.set_status(
+            phantom.APP_ERROR,
+            A1000_ERR_REST_API.format(
+                status_code=status_code,
+                detail=detail))
 
-    def _make_rest_call(self, endpoint, result, error_desc, method="get", params={}, data={}, filein=None, files=None, parse_response=True, additional_succ_codes={}):
+    def _make_rest_call(
+            self,
+            endpoint,
+            result,
+            error_desc,
+            method="get",
+            params={},
+            data={},
+            filein=None,
+            files=None,
+            parse_response=True,
+            additional_succ_codes={}):
 
         url = "{0}{1}".format(self._base_url, endpoint)
 
@@ -215,7 +232,8 @@ class A1000Connector(BaseConnector):
         # request_func = getattr(self._req_sess, method)
 
         # if (not request_func):
-        #    return (result.set_status(phantom.APP_ERROR, "Invalid method call: {0} for requests module".format(method)), None)
+        # return (result.set_status(phantom.APP_ERROR, "Invalid method call: {0}
+        # for requests module".format(method)), None)
 
         if method == 'post':
             try:
@@ -225,15 +243,28 @@ class A1000Connector(BaseConnector):
                                   verify=config[phantom.APP_JSON_VERIFY],
                                   headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY]})
             except Exception as e:
-                return (result.set_status(phantom.APP_ERROR, "REST Api to server failed", e), None)
+                return (
+                    result.set_status(
+                        phantom.APP_ERROR,
+                        "REST Api to server failed",
+                        e),
+                    None)
         else:
             try:
                 url = "{0}{1}{2}".format(url, data['hash'], '/ticore/')
-                result.add_debug_data({'r_text': url + ' ' + config[A1000_JSON_API_KEY]})
-                r = requests.get(url,
-                                 headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY]})
+                result.add_debug_data(
+                    {'r_text': url + ' ' + config[A1000_JSON_API_KEY]})
+                r = requests.get(
+                    url,
+                    headers={
+                        'Authorization': 'Token %s' % config[A1000_JSON_API_KEY]})
             except Exception as e:
-                return (result.set_status(phantom.APP_ERROR, "REST Api to server failed", e), None)
+                return (
+                    result.set_status(
+                        phantom.APP_ERROR,
+                        "REST Api to server failed",
+                        e),
+                    None)
 
         # It's ok if r.text is None, dump that
         if (hasattr(result, 'add_debug_data')):
@@ -241,7 +272,9 @@ class A1000Connector(BaseConnector):
         # import pdb;pdb.set_trace()
         if (r.status_code in additional_succ_codes):
             response = additional_succ_codes[r.status_code]
-            return (phantom.APP_SUCCESS, response if response is not None else r.text)
+            return (
+                phantom.APP_SUCCESS,
+                response if response is not None else r.text)
 
         # Look for errors
         if r.status_code in [404]:  # pylint: disable=E1101
@@ -267,9 +300,15 @@ class A1000Connector(BaseConnector):
             if (hasattr(Vault, 'get_file_path')):
                 payload = open(Vault.get_file_path(vault_id), 'rb')
             else:
-                payload = open(Vault.get_vault_file(vault_id), 'rb')  # pylint: disable=E1101
-        except:
-            return (action_result.set_status(phantom.APP_ERROR, 'File not found in vault ("{}")'.format(vault_id)), None)
+                payload = open(
+                    Vault.get_vault_file(vault_id),
+                    'rb')  # pylint: disable=E1101
+        except BaseException:
+            return (
+                action_result.set_status(
+                    phantom.APP_ERROR,
+                    'File not found in vault ("{}")'.format(vault_id)),
+                None)
 
         files = {'file': (filename, payload)}
 
@@ -284,25 +323,32 @@ class A1000Connector(BaseConnector):
 
         try:
             payload = open(filepath, 'rb')
-        except:
-           self.set_status(phantom.APP_ERROR, 'Test pdf file not found at "{}"'.format(filepath))
-           self.append_to_message('Test Connectivity failed')
-           return self.get_status()
+        except BaseException:
+            self.set_status(phantom.APP_ERROR,
+                            'Test pdf file not found at "{}"'.format(filepath))
+            self.append_to_message('Test Connectivity failed')
+            return self.get_status()
 
         try:
-            self.save_progress('Detonating test pdf file for checking connectivity')
+            self.save_progress(
+                'Detonating test pdf file for checking connectivity')
             files = payload
-            ret_val, response = self._make_rest_call('/api/uploads/', self, self.FILE_UPLOAD_ERROR_DESC, method='post', filein=files)
-        except:
-           self.set_status(phantom.APP_ERROR, 'Connectivity failed, check the server name and API key.\n')
-           self.append_to_message('Test Connectivity failed.\n')
-           return self.get_status()
+            ret_val, response = self._make_rest_call(
+                '/api/uploads/', self, self.FILE_UPLOAD_ERROR_DESC,
+                method='post', filein=files)
+        except BaseException:
+            self.set_status(
+                phantom.APP_ERROR,
+                'Connectivity failed, check the server name and API key.\n')
+            self.append_to_message('Test Connectivity failed.\n')
+            return self.get_status()
 
         if (phantom.is_fail(ret_val)):
             self.append_to_message('Test Connectivity Failed')
             return self.get_status()
 
-        return self.set_status_save_progress(phantom.APP_SUCCESS, 'Test Connectivity Passed')
+        return self.set_status_save_progress(
+            phantom.APP_SUCCESS, 'Test Connectivity Passed')
 
     def _normalize_into_list(self, input_dict, key):
         if (not input_dict):
@@ -323,7 +369,7 @@ class A1000Connector(BaseConnector):
             return {}
 
         for key in input_dict.keys():
-            if (type(input_dict[key]) != list):
+            if (not isinstance(input_dict[key], list)):
                 input_dict[key] = [input_dict[key]]
             input_dict[key.lower()] = input_dict.pop(key)
 
@@ -336,7 +382,9 @@ class A1000Connector(BaseConnector):
 
         data = {'hash': task_id}
 
-        ret_val, response = self._make_rest_call('/api/samples/', action_result, self.GET_REPORT_ERROR_DESC, method='get', data=data)
+        ret_val, response = self._make_rest_call(
+            '/api/samples/', action_result, self.GET_REPORT_ERROR_DESC,
+            method='get', data=data)
 
         if (phantom.is_fail(ret_val)):
             return (action_result.get_status(), None)
@@ -367,10 +415,15 @@ class A1000Connector(BaseConnector):
 
             polling_attempt += 1
 
-            self.save_progress("Polling attempt {0} of {1}".format(polling_attempt, max_polling_attempts))
+            self.save_progress(
+                "Polling attempt {0} of {1}".format(
+                    polling_attempt,
+                    max_polling_attempts))
 
-            ret_val, response = self._make_rest_call('/api/samples/', action_result, self.GET_REPORT_ERROR_DESC, method='get', data=data,
-                    additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
+            ret_val, response = self._make_rest_call(
+                '/api/samples/', action_result, self.GET_REPORT_ERROR_DESC,
+                method='get', data=data,
+                additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
 
             if (phantom.is_fail(ret_val)):
                 return (action_result.get_status(), None)
@@ -382,7 +435,8 @@ class A1000Connector(BaseConnector):
             if (phantom.is_success(ret_val)):
 
                 # parse if successfull
-                response = self._parse_report_status_msg(response, action_result, data)
+                response = self._parse_report_status_msg(
+                    response, action_result, data)
 
                 if (response):
                     return (phantom.APP_SUCCESS, response)
@@ -391,13 +445,17 @@ class A1000Connector(BaseConnector):
 
         self.save_progress("Reached max polling attempts.")
 
-        return (action_result.set_status(phantom.APP_ERROR, A1000_MSG_MAX_POLLS_REACHED), None)
+        return (
+            action_result.set_status(
+                phantom.APP_ERROR,
+                A1000_MSG_MAX_POLLS_REACHED),
+            None)
 
     def _get_report(self, param):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        task_id = param[A1000_JSON_TASK_ID]
+        task_id = param[A1000_JSON_VAULT_ID]
 
         # Now poll for the result
         ret_val, response = self._poll_task_status(task_id, action_result)
@@ -410,9 +468,9 @@ class A1000Connector(BaseConnector):
         # The next part is the report
         data.update(response)
 
-        malware = data.get('file_info', {}).get('malware', 'no')
+        #malware = data.get('file_info', {}).get('malware', 'no')
 
-        action_result.update_summary({A1000_JSON_MALWARE: malware})
+        #action_result.update_summary({A1000_JSON_MALWARE: malware})
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -426,7 +484,9 @@ class A1000Connector(BaseConnector):
         try:
             os.makedirs(local_dir)
         except Exception as e:
-            return action_result.set_status(phantom.APP_ERROR, "Unable to create temporary folder '/vault/tmp'.", e)
+            return action_result.set_status(
+                phantom.APP_ERROR,
+                "Unable to create temporary folder '/vault/tmp'.", e)
 
         file_path = "{0}/{1}".format(local_dir, sample_hash)
 
@@ -446,7 +506,9 @@ class A1000Connector(BaseConnector):
         file_name = '{}{}'.format(sample_hash, file_ext)
 
         # move the file to the vault
-        vault_ret_dict = Vault.add_attachment(file_path, self.get_container_id(), file_name=file_name, metadata={'contains': contains})
+        vault_ret_dict = Vault.add_attachment(
+            file_path, self.get_container_id(),
+            file_name=file_name, metadata={'contains': contains})
         curr_data = {}
 
         if (vault_ret_dict['succeeded']):
@@ -460,28 +522,15 @@ class A1000Connector(BaseConnector):
             action_result.update_summary(summary)
             action_result.set_status(phantom.APP_SUCCESS)
         else:
-            action_result.set_status(phantom.APP_ERROR, phantom.APP_ERR_FILE_ADD_TO_VAULT)
+            action_result.set_status(
+                phantom.APP_ERROR,
+                phantom.APP_ERR_FILE_ADD_TO_VAULT)
             action_result.append_to_message(vault_ret_dict['message'])
 
         # remove the /tmp/<> temporary directory
         shutil.rmtree(local_dir)
 
         return action_result.get_status()
-
-    def _get_sample(self, param):
-
-        action_result = self.add_action_result(ActionResult(dict(param)))
-
-        sample_hash = param[A1000_JSON_HASH]
-
-        self.save_progress('Getting file from A1000')
-
-        ret_val, response = self._make_rest_call('/get/sample', action_result, self.GET_SAMPLE_ERROR_DESC, method='post', data={'hash': sample_hash}, parse_response=False)
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        return self._save_file_to_vault(action_result, response, sample_hash)
 
     def _get_platform_id(self, param):
 
@@ -497,82 +546,12 @@ class A1000Connector(BaseConnector):
 
         return self.PLATFORM_ID_MAPPING[platform]
 
-    def _get_pcap(self, param):
-
-        action_result = self.add_action_result(ActionResult(dict(param)))
-
-        sample_hash = param[A1000_JSON_HASH]
-        rest_data = {'hash': sample_hash}
-
-        platform_id = self._get_platform_id(param)
-
-        if (platform_id):
-            rest_data.update({'platform': platform_id})
-
-        self.save_progress('Getting pcap from A1000')
-
-        ret_val, response = self._make_rest_call('/get/pcap', action_result, self.GET_PCAP_ERROR_DESC, method='post', data=rest_data, parse_response=False)
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        return self._save_file_to_vault(action_result, response, sample_hash)
-
     def validate_parameters(self, param):
         """Do our own validations instead of BaseConnector doing it for us"""
 
         action = self.get_action_identifier()
 
-        if (action == self.ACTION_ID_DETONATE_URL):
-
-            # add an http if not present
-            url = param[A1000_JSON_URL]
-            if ('://' not in url):
-                url = "http://{0}".format(url)
-
-            if (not ph_utils.is_url(url)):
-                return phantom.APP_ERROR
-
-            param[A1000_JSON_URL] = url
-
         return phantom.APP_SUCCESS
-
-    def _detonate_url(self, param):
-
-        action_result = self.add_action_result(ActionResult(dict(param)))
-
-        # add an http if not present
-        url = param[A1000_JSON_URL]
-
-        self.save_progress('Detonating URL')
-
-        ret_val, response = self._make_rest_call('/submit/link', action_result, self.FILE_UPLOAD_ERROR_DESC, method='post', files={'link': ('', url)})
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        data = action_result.add_data({})
-
-        # The first part is the uploaded file info
-        data.update(response)
-
-        # get the sha256
-        task_id = response.get('submit-link-info', {}).get('sha256')
-
-        # Now poll for the result
-        ret_val, response = self._poll_task_status(task_id, action_result)
-
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        # The next part is the report
-        data.update(response)
-
-        malware = data.get('file_info', {}).get('malware', 'no')
-
-        action_result.update_summary({A1000_JSON_MALWARE: malware})
-
-        return action_result.set_status(phantom.APP_SUCCESS)
 
     def _get_vault_file_sha256(self, vault_id, action_result):
 
@@ -583,25 +562,37 @@ class A1000Connector(BaseConnector):
 
         if (hasattr(Vault, 'get_file_info')):
             try:
-                metadata = Vault.get_file_info(container_id=self.get_container_id(), vault_id=vault_id)[0]['metadata']
+                metadata = Vault.get_file_info(
+                    container_id=self.get_container_id(),
+                    vault_id=vault_id)[0]['metadata']
             except Exception as e:
                 self.debug_print('Handled Exception:', e)
                 metadata = None
         else:
             try:
-                metadata = Vault.get_meta_by_hash(self.get_container_id(), vault_id, calculate=True)[0]
-            except:
+                metadata = Vault.get_meta_by_hash(
+                    self.get_container_id(),
+                    vault_id, calculate=True)[0]
+            except BaseException:
                 self.debug_print('Handled Exception:', e)
                 metadata = None
 
         if (not metadata):
-            return (action_result.set_status(phantom.APP_ERROR, "Unable to get meta info of vault file"), None)
+            return (
+                action_result.set_status(
+                    phantom.APP_ERROR,
+                    "Unable to get meta info of vault file"),
+                None)
 
         try:
             sha256 = metadata['sha256']
         except Exception as e:
             self.debug_print('Handled exception', e)
-            return (action_result.set_status(phantom.APP_ERROR, "Unable to get meta info of vault file"), None)
+            return (
+                action_result.set_status(
+                    phantom.APP_ERROR,
+                    "Unable to get meta info of vault file"),
+                None)
 
         return (phantom.APP_SUCCESS, sha256)
 
@@ -622,7 +613,11 @@ class A1000Connector(BaseConnector):
             return action_result.get_status()
 
         data = action_result.add_data({})
-        self.save_progress('Checking for prior detonations for' + vault_id + ' sha256 ' + sha256)
+        self.save_progress(
+            'Checking for prior detonations for' +
+            vault_id +
+            ' sha256 ' +
+            sha256)
         # check if tghere is existing report already
         ret_val, response = self._check_detonated_report(sha256, action_result)
 
@@ -633,7 +628,9 @@ class A1000Connector(BaseConnector):
             self.save_progress('Uploading the file')
 
             # upload the file to the upload service
-            ret_val, response = self._make_rest_call('/api/uploads/', action_result, self.FILE_UPLOAD_ERROR_DESC, method='post', filein=files['file'][1])
+            ret_val, response = self._make_rest_call(
+                '/api/uploads/', action_result, self.FILE_UPLOAD_ERROR_DESC,
+                method='post', filein=files['file'][1])
 
             if (phantom.is_fail(ret_val)):
                 return self.get_status()
@@ -666,14 +663,8 @@ class A1000Connector(BaseConnector):
 
         if (action_id == self.ACTION_ID_DETONATE_FILE):
             ret_val = self._detonate_file(param)
-        elif (action_id == self.ACTION_ID_DETONATE_URL):
-            ret_val = self._detonate_url(param)
         elif (action_id == self.ACTION_ID_GET_REPORT):
             ret_val = self._get_report(param)
-        elif (action_id == self.ACTION_ID_GET_SAMPLE):
-            ret_val = self._get_sample(param)
-        elif (action_id == self.ACTION_ID_GET_PCAP):
-            ret_val = self._get_pcap(param)
         elif (action_id == self.ACTION_ID_TEST_ASSET_CONNECTIVITY):
             ret_val = self._test_connectivity(param)
         return ret_val
