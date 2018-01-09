@@ -13,7 +13,8 @@
     "min_phantom_version": "3.0.251",
     "publisher": "ReversingLabs",
     "consolidate_widgets": true,
-    "logo": "rl.png",
+    "logo": "logo_reversinglabs.svg",
+    "logo_dark": "logo_reversinglabs_dark.svg",
     "license": "Copyright (c) ReversingLabs Inc 2016-2017",
     "configuration": {
         "base_url": {
@@ -107,149 +108,38 @@
             },
             "output": [
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.sha256",
+                    "data_path": "action_result.status",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.md5",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_type",
+                    "data_path": "action_result.parameter.file_name",
                     "data_type": "string",
-                    "example_values": [
-                        "PE",
-                        "PE+",
-                        "Document",
-                        "Binary",
-                        "Text",
-                        "ELF32 Little",
-                        "MZ",
-                        "PE16",
-                        "DEX",
-                        "ODEX",
-                        "Image",
-                        "Audio",
-                        "Video",
-                        "Media Container"
-                    ],
-                    "column_order": 2
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_subtype",
-                    "data_type": "string",
-                    "example_values": [
-                        "None",
-                        "Exe",
-                        "Dll",
-                        ".Net Exe",
-                        "VXD",
-                        "Archive",
-                        "HTML",
-                        ".Net Dll",
-                        "Core",
-                        "SO"
+                    "contains": [
+                        "file name"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.entropy",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.size",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_from",
+                    "data_path": "action_result.parameter.vault_id",
                     "data_type": "string",
-                    "example_values": [
-                        "Dec 21 00:00:00 2012 GMT",
-                        "Oct 18 00:00:00 2012 GMT"
+                    "contains": [
+                        "pe file",
+                        "pdf",
+                        "flash",
+                        "apk",
+                        "jar",
+                        "doc",
+                        "xls",
+                        "ppt",
+                        "vault id"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_modulus",
+                    "data_path": "action_result.data.*.a1000_link",
                     "data_type": "string"
                 },
                 {
                     "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.expired",
                     "data_type": "boolean"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_to",
-                    "data_type": "string",
-                    "example_values": [
-                        "Dec 29 23:59:59 2020 GMT",
-                        "Jan 29 23:59:59 2016 GMT"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.version",
-                    "data_type": "numeric",
-                    "example_values": [
-                        "1",
-                        "2"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature_algorithm",
-                    "data_type": "string",
-                    "example_values": [
-                        "sha1WithRSAEncryption"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.serial_number",
-                    "data_type": "string",
-                    "contains": [
-                        "md5",
-                        "sha1"
-                    ],
-                    "example_values": [
-                        "5200E5AA2556FC1A86ED96C9D64B23C7"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint_algorithm",
-                    "data_type": "string",
-                    "example_values": [
-                        "SHA256",
-                        "SHA1",
-                        "SHA512"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.issuer",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_exponent",
-                    "data_type": "string",
-                    "example_values": [
-                        "010001"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint",
-                    "data_type": "string",
-                    "contains": [
-                        "sha256",
-                        "sha1"
-                    ],
-                    "example_values": [
-                        "0CFC19DB681B014BFE3F23CB3A78B67208B4E3D8D7B6A7B1807F7CD6ECB2A54E"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.subject",
-                    "data_type": "string",
-                    "contains": [
-                        "url"
-                    ]
                 },
                 {
                     "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.extensions.*.is_critical",
@@ -274,39 +164,91 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.category",
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.issuer",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_exponent",
                     "data_type": "string",
                     "example_values": [
-                        "ipv4",
-                        "ipv6",
-                        "http"
+                        "010001"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.values",
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_modulus",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.serial_number",
                     "data_type": "string",
+                    "contains": [
+                        "md5",
+                        "sha1"
+                    ],
                     "example_values": [
-                        "127.0.0.1",
-                        "::",
-                        "traderstruthrevealed.com",
-                        "cloud_print.email"
+                        "5200E5AA2556FC1A86ED96C9D64B23C7"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.indicators.*.priority",
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature_algorithm",
                     "data_type": "string",
                     "example_values": [
-                        "0 - least interesting",
+                        "sha1WithRSAEncryption"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.subject",
+                    "data_type": "string",
+                    "contains": [
+                        "url"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint",
+                    "data_type": "string",
+                    "contains": [
+                        "sha256",
+                        "sha1"
+                    ],
+                    "example_values": [
+                        "0CFC19DB681B014BFE3F23CB3A78B67208B4E3D8D7B6A7B1807F7CD6ECB2A54E"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint_algorithm",
+                    "data_type": "string",
+                    "example_values": [
+                        "SHA256",
+                        "SHA1",
+                        "SHA512"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_from",
+                    "data_type": "string",
+                    "example_values": [
+                        "Dec 21 00:00:00 2012 GMT",
+                        "Oct 18 00:00:00 2012 GMT"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_to",
+                    "data_type": "string",
+                    "example_values": [
+                        "Dec 29 23:59:59 2020 GMT",
+                        "Jan 29 23:59:59 2016 GMT"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.version",
+                    "data_type": "numeric",
+                    "example_values": [
                         "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10 - most interesting"
+                        "2"
                     ]
                 },
                 {
@@ -332,15 +274,92 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.a1000_link",
+                    "data_path": "action_result.data.*.task_info.report.*.indicators.*.priority",
+                    "data_type": "string",
+                    "example_values": [
+                        "0 - least interesting",
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10 - most interesting"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.info.file.entropy",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_subtype",
+                    "data_type": "string",
+                    "example_values": [
+                        "None",
+                        "Exe",
+                        "Dll",
+                        ".Net Exe",
+                        "VXD",
+                        "Archive",
+                        "HTML",
+                        ".Net Dll",
+                        "Core",
+                        "SO"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_type",
+                    "data_type": "string",
+                    "example_values": [
+                        "PE",
+                        "PE+",
+                        "Document",
+                        "Binary",
+                        "Text",
+                        "ELF32 Little",
+                        "MZ",
+                        "PE16",
+                        "DEX",
+                        "ODEX",
+                        "Image",
+                        "Audio",
+                        "Video",
+                        "Media Container"
+                    ],
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.info.file.size",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.category",
+                    "data_type": "string",
+                    "example_values": [
+                        "ipv4",
+                        "ipv6",
+                        "http"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.values",
+                    "data_type": "string",
+                    "example_values": [
+                        "127.0.0.1",
+                        "::",
+                        "traderstruthrevealed.com",
+                        "cloud_print.email"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.md5",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.status",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.message",
+                    "data_path": "action_result.data.*.task_info.report.*.sha256",
                     "data_type": "string"
                 },
                 {
@@ -348,26 +367,8 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.parameter.vault_id",
-                    "data_type": "string",
-                    "contains": [
-                        "pe file",
-                        "pdf",
-                        "flash",
-                        "apk",
-                        "jar",
-                        "doc",
-                        "xls",
-                        "ppt",
-                        "vault id"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.file_name",
-                    "data_type": "string",
-                    "contains": [
-                        "file name"
-                    ]
+                    "data_path": "action_result.message",
+                    "data_type": "string"
                 }
             ],
             "versions": "EQ(*)"
@@ -413,149 +414,30 @@
             },
             "output": [
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.sha256",
+                    "data_path": "action_result.status",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.md5",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_type",
+                    "data_path": "action_result.parameter.file_name",
                     "data_type": "string",
-                    "example_values": [
-                        "PE",
-                        "PE+",
-                        "Document",
-                        "Binary",
-                        "Text",
-                        "ELF32 Little",
-                        "MZ",
-                        "PE16",
-                        "DEX",
-                        "ODEX",
-                        "Image",
-                        "Audio",
-                        "Video",
-                        "Media Container"
-                    ],
-                    "column_order": 2
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_subtype",
-                    "data_type": "string",
-                    "example_values": [
-                        "None",
-                        "Exe",
-                        "Dll",
-                        ".Net Exe",
-                        "VXD",
-                        "Archive",
-                        "HTML",
-                        ".Net Dll",
-                        "Core",
-                        "SO"
+                    "contains": [
+                        "file name"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.entropy",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.size",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_from",
+                    "data_path": "action_result.parameter.vault_id",
                     "data_type": "string",
-                    "example_values": [
-                        "Dec 21 00:00:00 2012 GMT",
-                        "Oct 18 00:00:00 2012 GMT"
+                    "contains": [
+                        "vault id"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_modulus",
+                    "data_path": "action_result.data.*.a1000_link",
                     "data_type": "string"
                 },
                 {
                     "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.expired",
                     "data_type": "boolean"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_to",
-                    "data_type": "string",
-                    "example_values": [
-                        "Dec 29 23:59:59 2020 GMT",
-                        "Jan 29 23:59:59 2016 GMT"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.version",
-                    "data_type": "numeric",
-                    "example_values": [
-                        "1",
-                        "2"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature_algorithm",
-                    "data_type": "string",
-                    "example_values": [
-                        "sha1WithRSAEncryption"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.serial_number",
-                    "data_type": "string",
-                    "contains": [
-                        "md5",
-                        "sha1"
-                    ],
-                    "example_values": [
-                        "5200E5AA2556FC1A86ED96C9D64B23C7"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint_algorithm",
-                    "data_type": "string",
-                    "example_values": [
-                        "SHA256",
-                        "SHA1",
-                        "SHA512"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.issuer",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_exponent",
-                    "data_type": "string",
-                    "example_values": [
-                        "010001"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint",
-                    "data_type": "string",
-                    "contains": [
-                        "sha256",
-                        "sha1"
-                    ],
-                    "example_values": [
-                        "0CFC19DB681B014BFE3F23CB3A78B67208B4E3D8D7B6A7B1807F7CD6ECB2A54E"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.subject",
-                    "data_type": "string",
-                    "contains": [
-                        "url"
-                    ]
                 },
                 {
                     "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.extensions.*.is_critical",
@@ -580,39 +462,91 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.category",
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.issuer",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_exponent",
                     "data_type": "string",
                     "example_values": [
-                        "ipv4",
-                        "ipv6",
-                        "http"
+                        "010001"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.values",
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_modulus",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.serial_number",
                     "data_type": "string",
+                    "contains": [
+                        "md5",
+                        "sha1"
+                    ],
                     "example_values": [
-                        "127.0.0.1",
-                        "::",
-                        "traderstruthrevealed.com",
-                        "cloud_print.email"
+                        "5200E5AA2556FC1A86ED96C9D64B23C7"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.indicators.*.priority",
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature_algorithm",
                     "data_type": "string",
                     "example_values": [
-                        "0 - least interesting",
+                        "sha1WithRSAEncryption"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.subject",
+                    "data_type": "string",
+                    "contains": [
+                        "url"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint",
+                    "data_type": "string",
+                    "contains": [
+                        "sha256",
+                        "sha1"
+                    ],
+                    "example_values": [
+                        "0CFC19DB681B014BFE3F23CB3A78B67208B4E3D8D7B6A7B1807F7CD6ECB2A54E"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint_algorithm",
+                    "data_type": "string",
+                    "example_values": [
+                        "SHA256",
+                        "SHA1",
+                        "SHA512"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_from",
+                    "data_type": "string",
+                    "example_values": [
+                        "Dec 21 00:00:00 2012 GMT",
+                        "Oct 18 00:00:00 2012 GMT"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_to",
+                    "data_type": "string",
+                    "example_values": [
+                        "Dec 29 23:59:59 2020 GMT",
+                        "Jan 29 23:59:59 2016 GMT"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.version",
+                    "data_type": "numeric",
+                    "example_values": [
                         "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10 - most interesting"
+                        "2"
                     ]
                 },
                 {
@@ -638,7 +572,92 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.a1000_link",
+                    "data_path": "action_result.data.*.task_info.report.*.indicators.*.priority",
+                    "data_type": "string",
+                    "example_values": [
+                        "0 - least interesting",
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10 - most interesting"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.info.file.entropy",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_subtype",
+                    "data_type": "string",
+                    "example_values": [
+                        "None",
+                        "Exe",
+                        "Dll",
+                        ".Net Exe",
+                        "VXD",
+                        "Archive",
+                        "HTML",
+                        ".Net Dll",
+                        "Core",
+                        "SO"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_type",
+                    "data_type": "string",
+                    "example_values": [
+                        "PE",
+                        "PE+",
+                        "Document",
+                        "Binary",
+                        "Text",
+                        "ELF32 Little",
+                        "MZ",
+                        "PE16",
+                        "DEX",
+                        "ODEX",
+                        "Image",
+                        "Audio",
+                        "Video",
+                        "Media Container"
+                    ],
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.info.file.size",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.category",
+                    "data_type": "string",
+                    "example_values": [
+                        "ipv4",
+                        "ipv6",
+                        "http"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.values",
+                    "data_type": "string",
+                    "example_values": [
+                        "127.0.0.1",
+                        "::",
+                        "traderstruthrevealed.com",
+                        "cloud_print.email"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.md5",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.task_info.report.*.sha256",
                     "data_type": "string"
                 }
             ],
