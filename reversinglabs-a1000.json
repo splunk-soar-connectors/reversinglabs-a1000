@@ -15,7 +15,7 @@
     "consolidate_widgets": true,
     "logo": "logo_reversinglabs.svg",
     "logo_dark": "logo_reversinglabs_dark.svg",
-    "license": "Copyright (c) ReversingLabs Inc 2016-2017",
+    "license": "Copyright (c) ReversingLabs Inc 2016-2018",
     "configuration": {
         "base_url": {
             "data_type": "string",
