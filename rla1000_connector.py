@@ -1,7 +1,7 @@
 # --
 # File: rla1000_connector.py
 #
-# Copyright (c) ReversingLabs Inc 2016-2017
+# Copyright (c) ReversingLabs Inc 2016-2018
 #
 # This unpublished material is proprietary to ReversingLabs Inc.
 # All rights reserved.
@@ -19,8 +19,6 @@ try:
     from phantom.vault import Vault
 except BaseException:
     import phantom.vault as Vault
-
-import phantom.utils as ph_utils
 
 from rla1000_consts import *
 
@@ -468,9 +466,9 @@ class A1000Connector(BaseConnector):
         # The next part is the report
         data.update(response)
 
-        #malware = data.get('file_info', {}).get('malware', 'no')
+        # malware = data.get('file_info', {}).get('malware', 'no')
 
-        #action_result.update_summary({A1000_JSON_MALWARE: malware})
+        # action_result.update_summary({A1000_JSON_MALWARE: malware})
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -548,8 +546,6 @@ class A1000Connector(BaseConnector):
 
     def validate_parameters(self, param):
         """Do our own validations instead of BaseConnector doing it for us"""
-
-        action = self.get_action_identifier()
 
         return phantom.APP_SUCCESS
 
