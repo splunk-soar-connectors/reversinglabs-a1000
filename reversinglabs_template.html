@@ -1,7 +1,5 @@
 {% extends 'widgets/widget_template.html' %}
 {% load custom_template %}
-{% block body_color %}white{% endblock %}
-{% block body_text_color %}black{% endblock %}
 {% block custom_title_prop %}{% if title_logo %}style="background-size: auto 60%; background-position: 50%; background-repeat: no-repeat; background-image: url('/app_resource/{{ title_logo }}');"{% endif %}{% endblock %}
 {% block widget_content %}
 
@@ -15,7 +13,6 @@
     html {
         margin:0;
         padding:0;
-        color:#000;
     }
     #nav ul {
         margin:0;
@@ -29,7 +26,6 @@
     }
     #header {
         padding:5px 10px;
-        background:#ddd;
     }
     h1 {
         margin:0;
@@ -37,7 +33,6 @@
     #wrap {
         width:1060px;
         margin:0 auto;
-        background-color:#fff;
         padding-top: 30px;
     }
     p {
@@ -80,7 +75,6 @@
         margin-bottom: 10px;
     }
     #wrap a {
-        color: #f2293c;
     }
     .head {
         position: relative;
@@ -95,7 +89,6 @@
         left: 0;
         width: 50px;
         height: 1px;
-        background-color: #f2293c;
     }
     .subhead {
         position: relative;
@@ -111,7 +104,6 @@
         left: 0;
         width: 35px;
         height: 1px;
-        background-color: #f2293c;
     }
     .highlight {
         font-weight: 500;
