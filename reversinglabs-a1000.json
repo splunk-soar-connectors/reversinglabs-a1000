@@ -1,10 +1,10 @@
 {
     "appid": "8a88c130-adec-42a0-bfbe-5ac65ac48ca9",
-    "name": "A1000",
+    "name": "RL A1000",
     "description": "This app integrates with the ReversingLabs A1000 Advanced Malware Analysis Appliance to implement investigative actions",
     "type": "sandbox",
     "main_module": "rla1000_connector.pyc",
-    "app_version": "1.1.12",
+    "app_version": "1.1.13",
     "utctime_updated": "2018-01-10T18:55:24.000000Z",
     "package_name": "phantom_rla1000",
     "product_vendor": "ReversingLabs",
