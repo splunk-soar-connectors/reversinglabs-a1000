@@ -44,6 +44,7 @@ class A1000Connector(BaseConnector):
     # The actions supported by this connector
     ACTION_ID_DETONATE_FILE = "detonate_file"
     ACTION_ID_GET_REPORT = "get_report"
+    ACTION_ID_REANALYZE_FILE = "reanalyze_file"
     ACTION_ID_TEST_ASSET_CONNECTIVITY = 'test_asset_connectivity'
 
     MAGIC_FORMATS = [
@@ -473,6 +474,36 @@ class A1000Connector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _reanalyze_file(self, param):
+
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        vault_id = param[A1000_JSON_VAULT_ID] #sha1
+
+        data = {'hash_value': [vault_id], 'analysis': 'cloud'}
+
+        ret_val, response = self._make_rest_call(
+            '/api/samples/analyze_bulk/', action_result, self.GET_REPORT_ERROR_DESC,
+            method='post', data=data,
+            additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
+
+        data = action_result.add_data({})
+
+        if (phantom.is_fail(ret_val)):
+            return action_result.get_status()
+
+        # The next part is the report
+        #data.update(response[0]['message'])
+        try:
+            action_result.set_summary({"Response": response['results'][0]['message']})
+        except:
+            action_result.set_summary(response)
+        # malware = data.get('file_info', {}).get('malware', 'no')
+
+        # action_result.update_summary({A1000_JSON_MALWARE: malware})
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def _save_file_to_vault(self, action_result, response, sample_hash):
 
         # Create a tmp directory on the vault partition
@@ -662,6 +693,8 @@ class A1000Connector(BaseConnector):
             ret_val = self._detonate_file(param)
         elif (action_id == self.ACTION_ID_GET_REPORT):
             ret_val = self._get_report(param)
+        elif (action_id == self.ACTION_ID_REANALYZE_FILE):
+            ret_val = self._reanalyze_file(param)
         elif (action_id == self.ACTION_ID_TEST_ASSET_CONNECTIVITY):
             ret_val = self._test_connectivity(param)
         return ret_val
