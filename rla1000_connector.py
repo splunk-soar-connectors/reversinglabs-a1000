@@ -169,7 +169,7 @@ class A1000Connector(BaseConnector):
 
         # pprint.pprint(response)
         response1['a1000_link'] = "{0}{1}".format(
-            self._base_url, "?q=" + data['hash'])
+            self._base_url, "/" + data['hash'])
         print "A1000 link:" + response1['a1000_link']
         return response1
 
