@@ -254,6 +254,7 @@ class A1000Connector(BaseConnector):
                     {'r_text': url + ' ' + config[A1000_JSON_API_KEY]})
                 r = requests.get(
                     url,
+                    verify=config[phantom.APP_JSON_VERIFY],
                     headers={
                         'Authorization': 'Token %s' % config[A1000_JSON_API_KEY]})
             except Exception as e:
