@@ -116,64 +116,6 @@ class A1000Connector(BaseConnector):
 
         return phantom.APP_SUCCESS
 
-    def _parse_report_status_msg(self, response, action_result, data):
-
-        reports = {}
-
-        if (not isinstance(reports, list)):
-            reports = [response]
-
-        # pprint.pprint(response)
-        response1 = {}
-        response1['task_info'] = {}
-        response1['task_info']['report'] = reports
-        # import pdb;pdb.set_trace()
-        for report in reports:
-            try:
-                report['temp_indicators'] = []
-                report['application'] = self._normalize_children_into_list(
-                    response.get('application'))
-                for i in response.get('indicators'):
-                    report['temp_indicators'].append(
-                        self._normalize_children_into_list(i))
-                report['indicators'] = report['temp_indicators']
-            except BaseException:
-                pass
-            try:
-                report['temp_indicators'] = []
-                for i in response.get('interesting_strings'):
-                    report['temp_indicators'].append(
-                        self._normalize_children_into_list(i))
-                report['interesting_strings'] = report['temp_indicators']
-            except BaseException:
-                pass
-            try:
-                report['temp_indicators'] = []
-                for i in response.get('certificate').get('certificates'):
-                    report['temp_indicators'].append(
-                        self._normalize_children_into_list(i))
-                report['certificate'] = report['temp_indicators']
-            except BaseException:
-                pass
-            try:
-                report['temp_indicators'] = []
-                # need to modify the summary to contain a dictionary
-                sum_entries = response.get('summary', {}).get('entry')
-                if (sum_entries):
-                    for i, entry in enumerate(sum_entries):
-                        if (not isinstance(entry, dict)):
-                            sum_entries[i] = {
-                                '#text': entry, '@details': 'N/A',
-                                '@score': 'N/A', '@id': 'N/A'}
-            except BaseException:
-                pass
-
-        # pprint.pprint(response)
-        response1['a1000_link'] = "{0}{1}".format(
-            self._base_url, "/" + data['hash'])
-        print "A1000 link:" + response1['a1000_link']
-        return response1
-
     def _parse_error(self, response, result, error_desc):
 
         status_code = response.status_code
@@ -269,7 +211,7 @@ class A1000Connector(BaseConnector):
         # It's ok if r.text is None, dump that
         if (hasattr(result, 'add_debug_data')):
             result.add_debug_data({'r_text': r.text if r else 'r is None'})
-        # import pdb;pdb.set_trace()
+
         if (r.status_code in additional_succ_codes):
             response = additional_succ_codes[r.status_code]
             return (
@@ -277,7 +219,7 @@ class A1000Connector(BaseConnector):
                 response if response is not None else r.text)
 
         # Look for errors
-        if r.status_code in [404]:  # pylint: disable=E1101
+        if not 200 <= r.status_code < 300:  # pylint: disable=E1101
             self._parse_error(r, result, error_desc)
             return (result.get_status(), r.text)
 
@@ -380,17 +322,20 @@ class A1000Connector(BaseConnector):
         since it is supposed to check just once and return, also treat a 404 as error
         """
 
-        data = {'hash': task_id}
+        data = {'hash_values': [task_id], 'fields': A1000_PARAM_LIST['fields']}
 
         ret_val, response = self._make_rest_call(
-            '/api/samples/', action_result, self.GET_REPORT_ERROR_DESC,
-            method='get', data=data)
+            '/api/samples/list/', action_result, self.GET_REPORT_ERROR_DESC,
+            method='post', data=data)
 
-        if (phantom.is_fail(ret_val)):
-            return (action_result.get_status(), None)
+        # results not found postpone
+        if ("count" in response ):
+            return phantom.APP_SUCCESS, response
+        elif "count" not in response:
+            return phantom.APP_ERROR, None
 
         # parse if successfull
-        response = self._parse_report_status_msg(response, action_result, data)
+        # response = self._parse_report_status_msg(response, action_result, data)
 
         if (response):
             return (phantom.APP_SUCCESS, response)
@@ -409,7 +354,7 @@ class A1000Connector(BaseConnector):
 
         max_polling_attempts = (int(timeout) * 60) / A1000_SLEEP_SECS
 
-        data = {'hash': task_id}
+        data = {'hash_values': [task_id], 'fields': A1000_PARAM_LIST['fields']}
 
         while (polling_attempt < max_polling_attempts):
 
@@ -421,23 +366,21 @@ class A1000Connector(BaseConnector):
                     max_polling_attempts))
 
             ret_val, response = self._make_rest_call(
-                '/api/samples/', action_result, self.GET_REPORT_ERROR_DESC,
-                method='get', data=data,
+                '/api/samples/list/', action_result, self.GET_REPORT_ERROR_DESC,
+                method='post', data=data,
                 additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
 
             if (phantom.is_fail(ret_val)):
                 return (action_result.get_status(), None)
 
-            if (A1000_MSG_REPORT_PENDING in response):
+            # if results not found postpone
+            if ("count" in response and response["count"] == 0):
                 time.sleep(A1000_SLEEP_SECS)
                 continue
+            elif "count" not in response:
+                return phantom.APP_ERROR, response
 
             if (phantom.is_success(ret_val)):
-
-                # parse if successfull
-                response = self._parse_report_status_msg(
-                    response, action_result, data)
-
                 if (response):
                     return (phantom.APP_SUCCESS, response)
 
@@ -458,15 +401,33 @@ class A1000Connector(BaseConnector):
         task_id = param[A1000_JSON_VAULT_ID]
 
         # Now poll for the result
-        ret_val, response = self._poll_task_status(task_id, action_result)
+        ret_val, response = self._check_detonated_report(task_id, action_result)
+        #ret_val, response = self._poll_task_status(task_id, action_result)
 
         if (phantom.is_fail(ret_val)):
             return action_result.get_status()
 
-        data = action_result.add_data({})
+        if ("count" in response and response["count"] == 0):
+            action_result.set_summary({"Response": "Report not found"})
+            data = action_result.add_data(response)
+            return action_result.set_status(phantom.APP_SUCCESS)
 
+        try:
+            data = action_result.add_data(response['results'][0])
+        except BaseException:
+            data = action_result.add_data(response)
+
+        try:
+            summary = {"threat_status": response['results'][0]['threat_status'],
+                       'a1000_report_url': "{0}{1}".format(
+                    self._base_url, "/" + task_id)}
+        except BaseException:
+            summary = {}
+
+        action_result.set_summary(summary)
+        #action_result.set_summary(summary)
         # The next part is the report
-        data.update(response)
+        # data.update(response['results'][0])
 
         # malware = data.get('file_info', {}).get('malware', 'no')
 
@@ -478,29 +439,27 @@ class A1000Connector(BaseConnector):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        vault_id = param[A1000_JSON_VAULT_ID] #sha1
+        vault_id = param[A1000_JSON_VAULT_ID]  # sha1
 
-        data = {'hash_value': [vault_id], 'analysis': 'cloud'}
+        data = {'analysis': 'cloud'}
+        #data = {'hash_value': [vault_id], 'analysis': 'cloud'}
 
         ret_val, response = self._make_rest_call(
-            '/api/samples/analyze_bulk/', action_result, self.GET_REPORT_ERROR_DESC,
+            '/api/samples/%s/analyze/' % vault_id, action_result, self.GET_REPORT_ERROR_DESC,
             method='post', data=data,
-            additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
-
-        data = action_result.add_data({})
+            additional_succ_codes={404: "File not found and could not be queued for analysis"})
 
         if (phantom.is_fail(ret_val)):
             return action_result.get_status()
 
-        # The next part is the report
-        #data.update(response[0]['message'])
+        # Set summary
         try:
-            action_result.set_summary({"Response": response['results'][0]['message']})
-        except:
-            action_result.set_summary(response)
-        # malware = data.get('file_info', {}).get('malware', 'no')
-
-        # action_result.update_summary({A1000_JSON_MALWARE: malware})
+            result = {"Response": response['message']}
+            data = action_result.add_data(result)
+            action_result.set_summary(result)
+        except BaseException:
+            data = action_result.add_data({'response': response})
+            action_result.set_summary({'response': response})
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -646,11 +605,11 @@ class A1000Connector(BaseConnector):
             vault_id +
             ' sha256 ' +
             sha256)
-        # check if tghere is existing report already
+        # check if there is existing report already
         ret_val, response = self._check_detonated_report(sha256, action_result)
 
         # report does not exist yet
-        if (phantom.is_fail(ret_val)):
+        if (phantom.is_fail(ret_val) or response["count"] == 0):
 
             # Was not detonated before
             self.save_progress('Uploading the file')
@@ -663,9 +622,6 @@ class A1000Connector(BaseConnector):
             if (phantom.is_fail(ret_val)):
                 return self.get_status()
 
-            # The first part is the uploaded file info
-            data.update(response)
-
             # get the sha1
             task_id = response.get('sha1')
             if task_id is None:
@@ -674,11 +630,39 @@ class A1000Connector(BaseConnector):
             # Now poll for the result
             ret_val, response = self._poll_task_status(task_id, action_result)
 
+            # Add the report
+            try:
+                data.update(response['results'][0])
+            except BaseException:
+                data.update(response)
+
+            # Add summary
+            try:
+                summary = {
+                    "threat_status": response['results'][0]['threat_status'],
+                    'a1000_report_url': "{0}{1}".format(
+                        self._base_url,
+                        "/" + sha256)}
+            except BaseException:
+                summary = {}
+
             if (phantom.is_fail(ret_val)):
                 return action_result.get_status()
 
         # Add the report
-        data.update(response)
+        try:
+            data.update(response['results'][0])
+        except BaseException:
+            data.update(response)
+
+        try:
+            summary = {"threat_status": response['results'][0]['threat_status'],
+                       'a1000_report_url': "{0}{1}".format(
+                    self._base_url, "/" + sha256)}
+        except BaseException:
+            summary = {}
+
+        action_result.update_summary(summary)
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def handle_action(self, param):
