@@ -130,8 +130,12 @@
             {{ parameters.status }}
         </div>
         <div class="tb-cell ellipsis rl-result-hash">
+            <span class="rl-data-label">Trust Factor: </span>
+            {{ parameters.trust_factor }}
+        </div>
+        <div class="tb-cell ellipsis rl-result-hash">
             <span class="rl-data-label">Threat Level (5 - highest): </span>
-            {{ parameters.threat_factor }}
+            {{ parameters.threat_level }}
         </div>
         <div class="tb-cell rl-result-hash">
             <span class="rl-data-label rl-data-label-util">Classification results:</span>{{ parameters.scanners }}
