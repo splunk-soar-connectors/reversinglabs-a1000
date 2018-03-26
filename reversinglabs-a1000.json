@@ -4,7 +4,7 @@
     "description": "This app integrates with the ReversingLabs A1000 Advanced Malware Analysis Appliance to implement investigative actions",
     "type": "sandbox",
     "main_module": "rla1000_connector.pyc",
-    "app_version": "1.2.0",
+    "app_version": "1.2.1",
     "utctime_updated": "2018-01-10T18:55:24.000000Z",
     "package_name": "phantom_rla1000",
     "product_vendor": "ReversingLabs",
@@ -110,6 +110,11 @@
                 {
                     "data_path": "action_result.status",
                     "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.result",
+                    "data_type": "string",
+                    "example_values": ["pending", "finished"]
                 },
                 {
                     "data_path": "action_result.data.*.aliases.*",
@@ -412,7 +417,7 @@
         },
         {
             "action": "reanalyze file",
-            "description": "Analyze the file in the A1000 Advanced Malware Analysis Appliance and retrieve the analysis results",
+            "description": "Reanalyze the file in the A1000 Advanced Malware Analysis Appliance",
             "verbose": "This action requires the input file to be present in the vault and therefore takes the vault id as the input parameter.",
             "type": "investigate",
             "identifier": "reanalyze_file",
@@ -501,6 +506,11 @@
                 {
                     "data_path": "action_result.status",
                     "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.result",
+                    "data_type": "string",
+                    "example_values": ["pending", "finished"]
                 },
                 {
                     "data_path": "action_result.data.*.aliases.*",

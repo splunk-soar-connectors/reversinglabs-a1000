@@ -416,6 +416,7 @@ class A1000Connector(BaseConnector):
             if response['results'][0]['threat_status'] == "unknown":
                 data = action_result.add_data({"result": "pending", "message": "please try getting report again later"})
             else:
+                response["results"][0]["result"] = "finished"
                 data = action_result.add_data(response['results'][0])
         except BaseException:
             data = action_result.add_data(response)
@@ -638,6 +639,7 @@ class A1000Connector(BaseConnector):
                 if response['results'][0]['threat_status'] == "unknown":
                     data.update({"result": "pending", "message": "please try getting report again later"})
                 else:
+                    response["results"][0]["result"] = "finished"
                     data.update(response['results'][0])
             except BaseException:
                 data.update(response)
@@ -660,6 +662,7 @@ class A1000Connector(BaseConnector):
             if response['results'][0]['threat_status'] == "unknown":
                 data.update({"result": "pending", "message": "please try getting report again later"})
             else:
+                response["results"][0]["result"] = "finished"
                 data.update(response['results'][0])
         except BaseException:
             data.update(response)
