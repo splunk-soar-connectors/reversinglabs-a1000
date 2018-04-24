@@ -1,10 +1,10 @@
 {
     "appid": "8a88c130-adec-42a0-bfbe-5ac65ac48ca9",
-    "name": "A1000",
+    "name": "RL A1000",
     "description": "This app integrates with the ReversingLabs A1000 Advanced Malware Analysis Appliance to implement investigative actions",
     "type": "sandbox",
     "main_module": "rla1000_connector.pyc",
-    "app_version": "1.1.11",
+    "app_version": "1.3.0",
     "utctime_updated": "2018-01-10T18:55:24.000000Z",
     "package_name": "phantom_rla1000",
     "product_vendor": "ReversingLabs",
@@ -112,41 +112,35 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.parameter.file_name",
+                    "data_path": "action_result.data.*.result",
+                    "data_type": "string",
+                    "example_values": ["pending", "finished"]
+                },
+                {
+                    "data_path": "action_result.data.*.aliases.*",
                     "data_type": "string",
                     "contains": [
-                        "file name"
+                        "aliases"
                     ]
                 },
                 {
                     "data_path": "action_result.parameter.vault_id",
-                    "data_type": "string",
-                    "contains": [
-                        "pe file",
-                        "pdf",
-                        "flash",
-                        "apk",
-                        "jar",
-                        "doc",
-                        "xls",
-                        "ppt",
-                        "vault id"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.a1000_link",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.expired",
+                    "data_path": "action_result.summary.*.a1000_link",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.expired",
                     "data_type": "boolean"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.extensions.*.is_critical",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.extensions.*.is_critical",
                     "data_type": "boolean"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.extensions.*.name",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.extensions.*.name",
                     "data_type": "string",
                     "example_values": [
                         "Authority Information Access",
@@ -155,7 +149,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.extensions.*.value",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.extensions.*.value",
                     "data_type": "string",
                     "example_values": [
                         "Object Signing",
@@ -164,22 +158,22 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.issuer",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.issuer",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_exponent",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.public_key_exponent",
                     "data_type": "string",
                     "example_values": [
                         "010001"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_modulus",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.public_key_modulus",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.serial_number",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.serial_number",
                     "data_type": "string",
                     "contains": [
                         "md5",
@@ -190,25 +184,25 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.signature",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature_algorithm",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.signature_algorithm",
                     "data_type": "string",
                     "example_values": [
                         "sha1WithRSAEncryption"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.subject",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.subject",
                     "data_type": "string",
                     "contains": [
                         "url"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.thumbprint",
                     "data_type": "string",
                     "contains": [
                         "sha256",
@@ -219,7 +213,57 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint_algorithm",
+                    "data_path": "action_result.data.*.ticloud.threat_status",
+                    "data_type": "string",
+                    "example_values": [
+                        "malicious",
+                        "suspicious",
+                        "known",
+                        "unknown"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.ticloud.threat_name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.ticloud.first_seen",
+                    "data_type": "string",
+                    "example_values": [
+                        "2017-02-05T14:24:13.892008Z"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.ticloud.last_seen",
+                    "data_type": "string",
+                    "example_values": [
+                        "2017-03-05T14:24:13.892008Z"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.local_first_seen",
+                    "data_type": "string",
+                    "example_values": [
+                        "2017-02-05T14:24:13.892008Z"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.local_last_seen",
+                    "data_type": "string",
+                    "example_values": [
+                        "2017-03-05T14:24:13.892008Z"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.ticloud.threat_level",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.ticloud.trust_factor",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.thumbprint_algorithm",
                     "data_type": "string",
                     "example_values": [
                         "SHA256",
@@ -228,7 +272,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_from",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.valid_from",
                     "data_type": "string",
                     "example_values": [
                         "Dec 21 00:00:00 2012 GMT",
@@ -236,7 +280,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_to",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.valid_to",
                     "data_type": "string",
                     "example_values": [
                         "Dec 29 23:59:59 2020 GMT",
@@ -244,7 +288,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.version",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.version",
                     "data_type": "numeric",
                     "example_values": [
                         "1",
@@ -252,7 +296,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.indicators.*.category",
+                    "data_path": "action_result.data.*.ticore.indicators.*.category",
                     "data_type": "string",
                     "example_values": [
                         "0",
@@ -265,7 +309,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.indicators.*.description",
+                    "data_path": "action_result.data.*.ticore.indicators.*.description",
                     "data_type": "string",
                     "example_values": [
                         "Detects/enumerates process modules.",
@@ -274,7 +318,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.indicators.*.priority",
+                    "data_path": "action_result.data.*.ticore.indicators.*.priority",
                     "data_type": "string",
                     "example_values": [
                         "0 - least interesting",
@@ -291,11 +335,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.entropy",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_subtype",
+                    "data_path": "action_result.data.*.file_subtype",
                     "data_type": "string",
                     "example_values": [
                         "None",
@@ -311,7 +351,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_type",
+                    "data_path": "action_result.data.*.file_type",
                     "data_type": "string",
                     "example_values": [
                         "PE",
@@ -332,11 +372,11 @@
                     "column_order": 2
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.size",
+                    "data_path": "action_result.data.*.file.size",
                     "data_type": "numeric"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.category",
+                    "data_path": "action_result.data.*.ticore.interesting_strings.*.category",
                     "data_type": "string",
                     "example_values": [
                         "ipv4",
@@ -345,7 +385,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.values",
+                    "data_path": "action_result.data.*.ticore.interesting_strings.*.values",
                     "data_type": "string",
                     "example_values": [
                         "127.0.0.1",
@@ -363,14 +403,64 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
+                    "data_path": "action_result.summary.threat_status",
+                    "data_type": "string",
+                    "example_values": [
+                        "malicious",
+                        "suspicious",
+                        "unknown",
+                        "known"
+                    ]
                 }
             ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "reanalyze file",
+            "description": "Reanalyze the file in the A1000 Advanced Malware Analysis Appliance",
+            "verbose": "This action requires the input file to be present in the vault and therefore takes the vault id as the input parameter.",
+            "type": "investigate",
+            "identifier": "reanalyze_file",
+            "read_only": true,
+            "lock": {
+                "enabled": false
+            },
+            "parameters": {
+                "vault_id": {
+                    "description": "Vault ID of file to detonate",
+                    "data_type": "string",
+                    "order": 0,
+                    "required": true,
+                    "primary": true
+                },
+                "file_name": {
+                    "description": "Filename to use",
+                    "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault",
+                    "data_type": "string",
+                    "order": 1,
+                    "contains": [
+                        "file name"
+                    ],
+                    "required": false
+                }
+            },
+            "render": {
+                "type": "custom",
+                "width": 10,
+                "height": 5,
+                "view": "reversinglabs_view.file_reputation",
+                "title": "A1000 Upload Status"
+            },
+                
+            "output": [{
+                    "data_path": "action_result.summary.response",
+                    "data_type": "string",
+                    "example_values": [
+                        "File not found and could not be queued for analysis",
+                        "Sample is queued for analysis.",
+                        "Sample is already queued for analysis"
+                    ]
+                }],
             "versions": "EQ(*)"
         },
         {
@@ -418,33 +508,35 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.parameter.file_name",
+                    "data_path": "action_result.data.*.result",
+                    "data_type": "string",
+                    "example_values": ["pending", "finished"]
+                },
+                {
+                    "data_path": "action_result.data.*.aliases.*",
                     "data_type": "string",
                     "contains": [
-                        "file name"
+                        "aliases"
                     ]
                 },
                 {
                     "data_path": "action_result.parameter.vault_id",
-                    "data_type": "string",
-                    "contains": [
-                        "vault id"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.a1000_link",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.expired",
+                    "data_path": "action_result.summary.*.a1000_link",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.expired",
                     "data_type": "boolean"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.extensions.*.is_critical",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.extensions.*.is_critical",
                     "data_type": "boolean"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.extensions.*.name",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.extensions.*.name",
                     "data_type": "string",
                     "example_values": [
                         "Authority Information Access",
@@ -453,7 +545,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.extensions.*.value",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.extensions.*.value",
                     "data_type": "string",
                     "example_values": [
                         "Object Signing",
@@ -462,22 +554,22 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.issuer",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.issuer",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_exponent",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.public_key_exponent",
                     "data_type": "string",
                     "example_values": [
                         "010001"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.public_key_modulus",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.public_key_modulus",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.serial_number",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.serial_number",
                     "data_type": "string",
                     "contains": [
                         "md5",
@@ -488,25 +580,25 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.signature",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.signature_algorithm",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.signature_algorithm",
                     "data_type": "string",
                     "example_values": [
                         "sha1WithRSAEncryption"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.subject",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.subject",
                     "data_type": "string",
                     "contains": [
                         "url"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.thumbprint",
                     "data_type": "string",
                     "contains": [
                         "sha256",
@@ -517,7 +609,57 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.thumbprint_algorithm",
+                    "data_path": "action_result.data.*.ticloud.threat_status",
+                    "data_type": "string",
+                    "example_values": [
+                        "malicious",
+                        "suspicious",
+                        "known",
+                        "unknown"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.ticloud.threat_name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.ticloud.first_seen",
+                    "data_type": "string",
+                    "example_values": [
+                        "2017-02-05T14:24:13.892008Z"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.ticloud.last_seen",
+                    "data_type": "string",
+                    "example_values": [
+                        "2017-03-05T14:24:13.892008Z"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.local_first_seen",
+                    "data_type": "string",
+                    "example_values": [
+                        "2017-02-05T14:24:13.892008Z"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.local_last_seen",
+                    "data_type": "string",
+                    "example_values": [
+                        "2017-03-05T14:24:13.892008Z"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.ticloud.threat_level",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.ticloud.trust_factor",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.thumbprint_algorithm",
                     "data_type": "string",
                     "example_values": [
                         "SHA256",
@@ -526,7 +668,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_from",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.valid_from",
                     "data_type": "string",
                     "example_values": [
                         "Dec 21 00:00:00 2012 GMT",
@@ -534,7 +676,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.valid_to",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.valid_to",
                     "data_type": "string",
                     "example_values": [
                         "Dec 29 23:59:59 2020 GMT",
@@ -542,7 +684,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.certificate.certificates.*.version",
+                    "data_path": "action_result.data.*.ticore.certificate.certificates.*.version",
                     "data_type": "numeric",
                     "example_values": [
                         "1",
@@ -550,7 +692,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.indicators.*.category",
+                    "data_path": "action_result.data.*.ticore.indicators.*.category",
                     "data_type": "string",
                     "example_values": [
                         "0",
@@ -563,7 +705,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.indicators.*.description",
+                    "data_path": "action_result.data.*.ticore.indicators.*.description",
                     "data_type": "string",
                     "example_values": [
                         "Detects/enumerates process modules.",
@@ -572,7 +714,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.indicators.*.priority",
+                    "data_path": "action_result.data.*.ticore.indicators.*.priority",
                     "data_type": "string",
                     "example_values": [
                         "0 - least interesting",
@@ -589,11 +731,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.entropy",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_subtype",
+                    "data_path": "action_result.data.*.file_subtype",
                     "data_type": "string",
                     "example_values": [
                         "None",
@@ -609,7 +747,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.file_type",
+                    "data_path": "action_result.data.*.file_type",
                     "data_type": "string",
                     "example_values": [
                         "PE",
@@ -630,11 +768,11 @@
                     "column_order": 2
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.info.file.size",
+                    "data_path": "action_result.data.*.file.size",
                     "data_type": "numeric"
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.category",
+                    "data_path": "action_result.data.*.ticore.interesting_strings.*.category",
                     "data_type": "string",
                     "example_values": [
                         "ipv4",
@@ -643,7 +781,7 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.task_info.report.*.interesting_strings.*.values",
+                    "data_path": "action_result.data.*.ticore.interesting_strings.*.values",
                     "data_type": "string",
                     "example_values": [
                         "127.0.0.1",
@@ -659,6 +797,16 @@
                 {
                     "data_path": "action_result.data.*.task_info.report.*.sha256",
                     "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.threat_status",
+                    "data_type": "string",
+                    "example_values": [
+                        "malicious",
+                        "suspicious",
+                        "unknown",
+                        "known"
+                    ]
                 }
             ],
             "versions": "EQ(*)"
