@@ -4,8 +4,8 @@
     "description": "This app integrates with the ReversingLabs A1000 Advanced Malware Analysis Appliance to implement investigative actions",
     "type": "sandbox",
     "main_module": "rla1000_connector.pyc",
-    "app_version": "1.3.0",
-    "utctime_updated": "2018-01-10T18:55:24.000000Z",
+    "app_version": "1.3.1",
+    "utctime_updated": "2018-04-27T20:59:18.000000Z",
     "package_name": "phantom_rla1000",
     "product_vendor": "ReversingLabs",
     "product_name": "A1000",
@@ -114,7 +114,10 @@
                 {
                     "data_path": "action_result.data.*.result",
                     "data_type": "string",
-                    "example_values": ["pending", "finished"]
+                    "example_values": [
+                        "pending",
+                        "finished"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.aliases.*",
@@ -454,8 +457,8 @@
                 "view": "reversinglabs_view.file_reputation",
                 "title": "A1000 Upload Status"
             },
-                
-            "output": [{
+            "output": [
+                {
                     "data_path": "action_result.summary.response",
                     "data_type": "string",
                     "example_values": [
@@ -463,7 +466,8 @@
                         "Sample is queued for analysis.",
                         "Sample is already queued for analysis"
                     ]
-                }],
+                }
+            ],
             "versions": "EQ(*)"
         },
         {
@@ -513,7 +517,10 @@
                 {
                     "data_path": "action_result.data.*.result",
                     "data_type": "string",
-                    "example_values": ["pending", "finished"]
+                    "example_values": [
+                        "pending",
+                        "finished"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.aliases.*",
