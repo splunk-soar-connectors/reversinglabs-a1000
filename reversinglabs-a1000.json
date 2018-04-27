@@ -430,6 +430,9 @@
                     "description": "Vault ID of file to detonate",
                     "data_type": "string",
                     "order": 0,
+                    "contains": [
+                        "vault id"
+                    ],
                     "required": true,
                     "primary": true
                 },
