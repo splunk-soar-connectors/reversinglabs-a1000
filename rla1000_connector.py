@@ -410,14 +410,17 @@ class A1000Connector(BaseConnector):
         if ("count" in response and response["count"] == 0):
             action_result.set_summary({"Response": "Report not found"})
             data = action_result.add_data(response)
-            return action_result.set_status(phantom.APP_SUCCESS)
+            return action_result.set_status(phantom.APP_ERROR)
 
+        polling_attempt = 0
+        max_polling_attempts = 10
         try:
-            if response['results'][0]['threat_status'] == "unknown":
-                data = action_result.add_data({"result": "pending", "message": "please try getting report again later"})
-            else:
-                response["results"][0]["result"] = "finished"
-                data = action_result.add_data(response['results'][0])
+            while (polling_attempt < max_polling_attempts and response['results'][0]['threat_status'] == "unknown"):
+                ret_val, response = self._check_detonated_report(task_id, action_result)
+                polling_attempt += 1
+                time.sleep(1)
+            response["results"][0]["result"] = "finished"
+            data = action_result.add_data(response['results'][0])
         except BaseException:
             data = action_result.add_data(response)
 
@@ -622,6 +625,7 @@ class A1000Connector(BaseConnector):
             ret_val, response = self._make_rest_call(
                 '/api/uploads/', action_result, self.FILE_UPLOAD_ERROR_DESC,
                 method='post', filein=files['file'][1])
+            startTime = time.time()
 
             if (phantom.is_fail(ret_val)):
                 return self.get_status()
@@ -636,21 +640,25 @@ class A1000Connector(BaseConnector):
 
             # Add the report
             try:
-                if response['results'][0]['threat_status'] == "unknown":
-                    data.update({"result": "pending", "message": "please try getting report again later"})
-                else:
-                    response["results"][0]["result"] = "finished"
-                    data.update(response['results'][0])
+                polling_attempt = 0
+                max_polling_attempts = 10
+                while (polling_attempt < max_polling_attempts and response['results'][0]['threat_status'] == "unknown"):
+                    ret_val, response = self._check_detonated_report(task_id, action_result)
+                    polling_attempt += 1
+                    time.sleep(1)
+
+                response["results"][0]["result"] = "finished"
+                data.update(response['results'][0])
             except BaseException:
                 data.update(response)
 
+            endTime = time.time()
             # Add summary
             try:
-                summary = {
-                    "threat_status": response['results'][0]['threat_status'],
-                    'a1000_report_url': "{0}{1}".format(
-                        self._base_url,
-                        "/" + sha256)}
+                summary = {"threat_status": response['results'][0]['threat_status'],
+                        'a1000_report_url': "{0}{1}".format(
+                        self._base_url, "/" + sha256),
+                        "analyze duration" : round(endTime - startTime, 2)}
             except BaseException:
                 summary = {}
 
@@ -658,19 +666,23 @@ class A1000Connector(BaseConnector):
                 return action_result.get_status()
 
         # Add the report
+        polling_attempt = 0
+        max_polling_attempts = 10
         try:
-            if response['results'][0]['threat_status'] == "unknown":
-                data.update({"result": "pending", "message": "please try getting report again later"})
-            else:
-                response["results"][0]["result"] = "finished"
-                data.update(response['results'][0])
+            while (polling_attempt < max_polling_attempts and response['results'][0]['threat_status'] == "unknown"):
+                ret_val, response = self._check_detonated_report(task_id, action_result)
+                polling_attempt += 1
+                time.sleep(1)
+            response["results"][0]["result"] = "finished"
+            data.update(response['results'][0])
         except BaseException:
             data.update(response)
 
         try:
             summary = {"threat_status": response['results'][0]['threat_status'],
                        'a1000_report_url': "{0}{1}".format(
-                    self._base_url, "/" + sha256)}
+                    self._base_url, "/" + sha256),
+                    "analyze duration" : round(endTime - startTime, 2)}
         except BaseException:
             summary = {}
 
