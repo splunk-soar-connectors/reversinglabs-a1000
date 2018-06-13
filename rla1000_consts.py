@@ -29,8 +29,8 @@ A1000_SUCC_REST_CALL_SUCCEEDED = "REST Api call succeeded"
 A1000_ERR_REST_API = "REST Api Call returned error, status_code: {status_code}, detail: {detail}"
 
 A1000_TEST_PDF_FILE = "a1000_test_connectivity.pdf"
-A1000_SLEEP_SECS = 10
-A1000_MSG_REPORT_PENDING = "Report Pending"
+A1000_SLEEP_SECS = 3
+A1000_MSG_REPORT_PENDING = "Report Not Found"
 A1000_MSG_MAX_POLLS_REACHED = "Reached max polling attempts. Please use the MD5 or Sha256 of the file as a parameter to <b>get report</b> to query the report status."
 A1000_PARAM_LIST = {
     "fields": [
