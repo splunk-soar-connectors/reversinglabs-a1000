@@ -319,7 +319,7 @@ class A1000Connector(BaseConnector):
         since it is supposed to check just once and return, also treat a 404 as error
         """
 
-        #data = {'hash_values': [task_id], 'fields': A1000_PARAM_LIST['fields']}
+        data = {'hash_values': [task_id], 'fields': A1000_PARAM_LIST['fields']}
 
         success, ticloud_response = self._make_rest_call(
             '/api/samples/%s/ticloud/' % task_id, action_result, self.GET_REPORT_ERROR_DESC,
@@ -331,17 +331,25 @@ class A1000Connector(BaseConnector):
             method='get',
             additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
 
-        success, threat_status = self._make_rest_call(
-            '/api/samples/%s/?fields=threat_status' % task_id, action_result, self.GET_REPORT_ERROR_DESC,
+        # ticore extracted
+        success, ef_response = self._make_rest_call(
+            '/api/samples/%s/extracted-files/' % task_id, action_result, self.GET_REPORT_ERROR_DESC,
             method='get',
             additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
 
-        if "threat_status" in threat_status:
-            threat_status = threat_status["threat_status"]
-        else:
-            threat_status = "result not found"
+        success, summary_data = self._make_rest_call(
+            '/api/samples/list/', action_result, self.GET_REPORT_ERROR_DESC, data=data,
+            method='post',
+            additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
 
-        return {"ticloud": ticloud_response}, {"ticore": ticore_response}, threat_status
+        if summary_data is not None and len(summary_data) > 0 and 'count' in summary_data and summary_data['count'] > 0:
+            summary_data = summary_data['results'][0]
+        #if "results" in threat_status and "threat_status" in threat_status['results'][0]:
+            #threat_status = threat_status['results'][0]["threat_status"]
+        #else:
+        #    threat_status = "result not found"
+
+        return {"ticloud": ticloud_response}, {"ticore": [ticore_response, ef_response]}, summary_data
 
 
         # parse if successfull
@@ -405,7 +413,7 @@ class A1000Connector(BaseConnector):
 
         # Now poll for the result
         try:
-            ticloud, ticore, threat_status = self._check_detonated_report(task_id, action_result)
+            ticloud, ticore, summary_data = self._check_detonated_report(task_id, action_result)
         except:
             action_result.add_data({"test": "fail"})
 
@@ -421,9 +429,9 @@ class A1000Connector(BaseConnector):
             action_result.add_data({"ticore": "result not found"})
 
         try:
-            summary = {"threat_status": threat_status,
-                       'a1000_report_url': "{0}{1}".format(
+            summary = {'a1000_report_url': "{0}{1}".format(
                     self._base_url, "/" + task_id)}
+            summary.update(summary_data)
         except BaseException:
             summary = {}
 
@@ -609,7 +617,7 @@ class A1000Connector(BaseConnector):
             ' sha256 ' +
             sha256)
         # check if there is existing report already
-        ticloud, ticore, threat_status = self._check_detonated_report(vault_id, action_result)
+        ticloud, ticore, summary_data = self._check_detonated_report(vault_id, action_result)
 
         # report does not exist yet
         if ticloud["ticloud"] == "Report Not Found"  or ticore["ticore"] == "Report Not Found":
@@ -636,7 +644,7 @@ class A1000Connector(BaseConnector):
 
 
             if not finished:
-                ticloud, ticore, threat_status = self._check_detonated_report(task_id, action_result)
+                ticloud, ticore, summary_data = self._check_detonated_report(task_id, action_result)
 
                 if ticloud is not None:
                     data["ticloud"] = ticloud
@@ -647,11 +655,11 @@ class A1000Connector(BaseConnector):
 
             analyze_time = round(time.time() - startTime, 3)
             try:
-                summary = {"threat_status": threat_status,
-                        'a1000_report_url': "{0}{1}".format(
+                summary = {'a1000_report_url': "{0}{1}".format(
                         self._base_url, "/" + sha256),
                         "sha1" : task_id,
                         "analyze duration" : analyze_time}
+                summary.update(summary_data)
             except BaseException:
                 summary = {}
 
@@ -660,9 +668,9 @@ class A1000Connector(BaseConnector):
             try:
                 polling_attempt = 0
                 max_polling_attempts = 10
-                ticloud, ticore, threat_status = self._check_detonated_report(sha256, action_result)
-                while (polling_attempt < max_polling_attempts and threat_status == "unknown"):
-                    ticloud, ticore, threat_status = self._check_detonated_report(task_id, action_result)
+                ticloud, ticore, summary_data = self._check_detonated_report(sha256, action_result)
+                while (polling_attempt < max_polling_attempts and summary_data["threat_status"] == "unknown"):
+                    ticloud, ticore, summary_data = self._check_detonated_report(task_id, action_result)
                     polling_attempt += 1
                     time.sleep(1)
 
@@ -684,7 +692,7 @@ class A1000Connector(BaseConnector):
         try:
             # Now poll for the result
             try:
-                ticloud, ticore, threat_status = self._check_detonated_report(sha256, action_result)
+                ticloud, ticore, summary_data = self._check_detonated_report(sha256, action_result)
             except:
                 action_result.add_data({"test0": "fail"})
 
@@ -703,9 +711,9 @@ class A1000Connector(BaseConnector):
                 #error
 
         try:
-            summary = {"threat_status": threat_status,
-                       'a1000_report_url': "{0}{1}".format(
+            summary = {'a1000_report_url': "{0}{1}".format(
                     self._base_url, "/" + sha256)}
+            summary.update(summary_data)
         except BaseException:
             summary = {}
 
