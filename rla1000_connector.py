@@ -344,10 +344,13 @@ class A1000Connector(BaseConnector):
 
         if summary_data is not None and len(summary_data) > 0 and 'count' in summary_data and summary_data['count'] > 0:
             summary_data = summary_data['results'][0]
-        #if "results" in threat_status and "threat_status" in threat_status['results'][0]:
-            #threat_status = threat_status['results'][0]["threat_status"]
-        #else:
-        #    threat_status = "result not found"
+            if "story" in ticore_response:
+                summary_data["story"] = ticore_response["story"]
+
+            # remove hashes other than sha1
+            if summary_data is not None and 'classification_origin' in summary_data and summary_data['classification_origin'] is not None and 'sha1' in summary_data['classification_origin']:
+                summary_data['classification_origin'] = {'sha1': summary_data['classification_origin']['sha1']}
+
 
         return {"ticloud": ticloud_response}, {"ticore": [ticore_response, ef_response]}, summary_data
 
