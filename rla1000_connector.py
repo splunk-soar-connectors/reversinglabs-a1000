@@ -192,9 +192,6 @@ class A1000Connector(BaseConnector):
                     None)
         else:
             try:
-                url = "{0}{1}{2}".format(url, data['hash'], '/ticore/')
-                result.add_debug_data(
-                    {'r_text': url + ' ' + config[A1000_JSON_API_KEY]})
                 r = requests.get(
                     url,
                     verify=config[phantom.APP_JSON_VERIFY],
@@ -220,8 +217,8 @@ class A1000Connector(BaseConnector):
 
         # Look for errors
         if not 200 <= r.status_code < 300:  # pylint: disable=E1101
-            self._parse_error(r, result, error_desc)
-            return (result.get_status(), r.text)
+            #self._parse_error(r, result, error_desc)
+            return (phantom.APP_ERROR, r)
 
         if (not parse_response):
             return (phantom.APP_SUCCESS, r)
@@ -324,23 +321,47 @@ class A1000Connector(BaseConnector):
 
         data = {'hash_values': [task_id], 'fields': A1000_PARAM_LIST['fields']}
 
-        ret_val, response = self._make_rest_call(
-            '/api/samples/list/', action_result, self.GET_REPORT_ERROR_DESC,
-            method='post', data=data)
+        success, ticloud_response = self._make_rest_call(
+            '/api/samples/%s/ticloud/' % task_id, action_result, self.GET_REPORT_ERROR_DESC,
+            method='get',
+            additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
 
-        # results not found postpone
-        if ("count" in response ):
-            return phantom.APP_SUCCESS, response
-        elif "count" not in response:
-            return phantom.APP_ERROR, None
+        success, ticore_response = self._make_rest_call(
+            '/api/samples/%s/ticore/' % task_id, action_result, self.GET_REPORT_ERROR_DESC,
+            method='get',
+            additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
+
+        # ticore extracted
+        success, ef_response = self._make_rest_call(
+            '/api/samples/%s/extracted-files/' % task_id, action_result, self.GET_REPORT_ERROR_DESC,
+            method='get',
+            additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
+
+        success, summary_data = self._make_rest_call(
+            '/api/samples/list/', action_result, self.GET_REPORT_ERROR_DESC, data=data,
+            method='post',
+            additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
+
+        if summary_data is not None and len(summary_data) > 0 and 'count' in summary_data and summary_data['count'] > 0:
+            summary_data = summary_data['results'][0]
+            if "story" in ticore_response:
+                summary_data["story"] = ticore_response["story"]
+
+            # remove hashes other than sha1
+            if summary_data is not None and 'classification_origin' in summary_data and summary_data['classification_origin'] is not None and 'sha1' in summary_data['classification_origin']:
+                summary_data['classification_origin'] = {'sha1': summary_data['classification_origin']['sha1']}
+
+
+        return {"ticloud": ticloud_response}, {"ticore": [ticore_response, ef_response]}, summary_data
+
 
         # parse if successfull
         # response = self._parse_report_status_msg(response, action_result, data)
 
-        if (response):
-            return (phantom.APP_SUCCESS, response)
+        #if (response):
+        #    return (phantom.APP_SUCCESS, response)
 
-        return (phantom.APP_ERROR, None)
+        #return (phantom.APP_ERROR, None)
 
     def _poll_task_status(self, task_id, action_result):
         polling_attempt = 0
@@ -354,7 +375,7 @@ class A1000Connector(BaseConnector):
 
         max_polling_attempts = (int(timeout) * 60) / A1000_SLEEP_SECS
 
-        data = {'hash_values': [task_id], 'fields': A1000_PARAM_LIST['fields']}
+        data = {'hash_values': [task_id]}
 
         while (polling_attempt < max_polling_attempts):
 
@@ -366,33 +387,26 @@ class A1000Connector(BaseConnector):
                     max_polling_attempts))
 
             ret_val, response = self._make_rest_call(
-                '/api/samples/list/', action_result, self.GET_REPORT_ERROR_DESC,
+                '/api/samples/status/', action_result, self.GET_REPORT_ERROR_DESC,
                 method='post', data=data,
                 additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
 
             if (phantom.is_fail(ret_val)):
                 return (action_result.get_status(), None)
 
-            # if results not found postpone
-            if ("count" in response and response["count"] == 0):
-                time.sleep(A1000_SLEEP_SECS)
-                continue
-            elif "count" not in response:
-                return phantom.APP_ERROR, response
+            # if results not processed postpone
+            if ("results" in response and len(response["results"]) > 0):
+                if response["results"][0]["status"] != "processed":
+                    time.sleep(A1000_SLEEP_SECS)
+                    continue
+                else:
+                    return True
 
-            if (phantom.is_success(ret_val)):
-                if (response):
-                    return (phantom.APP_SUCCESS, response)
-
-            time.sleep(A1000_SLEEP_SECS)
 
         self.save_progress("Reached max polling attempts.")
+        return False
 
-        return (
-            action_result.set_status(
-                phantom.APP_ERROR,
-                A1000_MSG_MAX_POLLS_REACHED),
-            None)
+        #return (action_result.set_status(phantom.APP_ERROR,A1000_MSG_MAX_POLLS_REACHED),None)
 
     def _get_report(self, param):
 
@@ -401,30 +415,26 @@ class A1000Connector(BaseConnector):
         task_id = param[A1000_JSON_VAULT_ID]
 
         # Now poll for the result
-        ret_val, response = self._check_detonated_report(task_id, action_result)
+        try:
+            ticloud, ticore, summary_data = self._check_detonated_report(task_id, action_result)
+        except:
+            action_result.add_data({"test": "fail"})
+
         #ret_val, response = self._poll_task_status(task_id, action_result)
 
-        if (phantom.is_fail(ret_val)):
-            return action_result.get_status()
-
-        if ("count" in response and response["count"] == 0):
-            action_result.set_summary({"Response": "Report not found"})
-            data = action_result.add_data(response)
-            return action_result.set_status(phantom.APP_SUCCESS)
+        try:
+            action_result.add_data(ticloud)
+        except:
+            action_result.add_data({"ticloud": "result not found"})
+        try:
+            action_result.add_data(ticore)
+        except:
+            action_result.add_data({"ticore": "result not found"})
 
         try:
-            if response['results'][0]['threat_status'] == "unknown":
-                data = action_result.add_data({"result": "pending", "message": "please try getting report again later"})
-            else:
-                response["results"][0]["result"] = "finished"
-                data = action_result.add_data(response['results'][0])
-        except BaseException:
-            data = action_result.add_data(response)
-
-        try:
-            summary = {"threat_status": response['results'][0]['threat_status'],
-                       'a1000_report_url': "{0}{1}".format(
+            summary = {'a1000_report_url': "{0}{1}".format(
                     self._base_url, "/" + task_id)}
+            summary.update(summary_data)
         except BaseException:
             summary = {}
 
@@ -610,10 +620,10 @@ class A1000Connector(BaseConnector):
             ' sha256 ' +
             sha256)
         # check if there is existing report already
-        ret_val, response = self._check_detonated_report(sha256, action_result)
+        ticloud, ticore, summary_data = self._check_detonated_report(vault_id, action_result)
 
         # report does not exist yet
-        if (phantom.is_fail(ret_val) or response["count"] == 0):
+        if ticloud["ticloud"] == "Report Not Found"  or ticore["ticore"] == "Report Not Found":
 
             # Was not detonated before
             self.save_progress('Uploading the file')
@@ -622,6 +632,7 @@ class A1000Connector(BaseConnector):
             ret_val, response = self._make_rest_call(
                 '/api/uploads/', action_result, self.FILE_UPLOAD_ERROR_DESC,
                 method='post', filein=files['file'][1])
+            startTime = time.time()
 
             if (phantom.is_fail(ret_val)):
                 return self.get_status()
@@ -632,45 +643,80 @@ class A1000Connector(BaseConnector):
                 task_id = response.get('detail').get('sha1')
 
             # Now poll for the result
-            ret_val, response = self._poll_task_status(task_id, action_result)
+            finished = self._poll_task_status(task_id, action_result)
+
+
+            if not finished:
+                ticloud, ticore, summary_data = self._check_detonated_report(task_id, action_result)
+
+                if ticloud is not None:
+                    data["ticloud"] = ticloud
+                if ticore is not None:
+                    data["ticore"] = ticore
+
+                data.update(data)
+
+            analyze_time = round(time.time() - startTime, 3)
+            try:
+                summary = {'a1000_report_url': "{0}{1}".format(
+                        self._base_url, "/" + sha256),
+                        "sha1" : task_id,
+                        "analyze duration" : analyze_time}
+                summary.update(summary_data)
+            except BaseException:
+                summary = {}
+
 
             # Add the report
             try:
-                if response['results'][0]['threat_status'] == "unknown":
-                    data.update({"result": "pending", "message": "please try getting report again later"})
-                else:
-                    response["results"][0]["result"] = "finished"
-                    data.update(response['results'][0])
-            except BaseException:
-                data.update(response)
+                polling_attempt = 0
+                max_polling_attempts = 10
+                ticloud, ticore, summary_data = self._check_detonated_report(sha256, action_result)
+                while (polling_attempt < max_polling_attempts and summary_data["threat_status"] == "unknown"):
+                    ticloud, ticore, summary_data = self._check_detonated_report(task_id, action_result)
+                    polling_attempt += 1
+                    time.sleep(1)
 
-            # Add summary
-            try:
-                summary = {
-                    "threat_status": response['results'][0]['threat_status'],
-                    'a1000_report_url': "{0}{1}".format(
-                        self._base_url,
-                        "/" + sha256)}
+                data = {"ticore": ticore, "ticloud": ticloud}
+                data.update(data)
             except BaseException:
-                summary = {}
+                return action_result.set_status(phantom.APP_ERROR, "failed to update data")
+                #error
+
+
+            action_result.update_summary(summary)
 
             if (phantom.is_fail(ret_val)):
                 return action_result.get_status()
 
         # Add the report
+        polling_attempt = 0
+        max_polling_attempts = 10
         try:
-            if response['results'][0]['threat_status'] == "unknown":
-                data.update({"result": "pending", "message": "please try getting report again later"})
-            else:
-                response["results"][0]["result"] = "finished"
-                data.update(response['results'][0])
+            # Now poll for the result
+            try:
+                ticloud, ticore, summary_data = self._check_detonated_report(sha256, action_result)
+            except:
+                action_result.add_data({"test0": "fail"})
+
+            #ret_val, response = self._poll_task_status(task_id, action_result)
+
+            try:
+                action_result.add_data(ticloud)
+            except:
+                action_result.add_data({"ticloud": "result not found"})
+            try:
+                action_result.add_data(ticore)
+            except:
+                action_result.add_data({"ticore": "result not found"})
         except BaseException:
-            data.update(response)
+                return action_result.set_status(phantom.APP_ERROR, "failed to update data stage 2")
+                #error
 
         try:
-            summary = {"threat_status": response['results'][0]['threat_status'],
-                       'a1000_report_url': "{0}{1}".format(
+            summary = {'a1000_report_url': "{0}{1}".format(
                     self._base_url, "/" + sha256)}
+            summary.update(summary_data)
         except BaseException:
             summary = {}
 
