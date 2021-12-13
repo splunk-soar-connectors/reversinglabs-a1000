@@ -12,15 +12,16 @@
 # --
 
 A1000_JSON_BASE_URL = "base_url"
-A1000_JSON_TASK_ID = "task_id"
 A1000_JSON_API_KEY = "api_key"
 A1000_JSON_MALWARE = "malware"
 A1000_JSON_TASK_ID = "id"
-A1000_JSON_VAULT_ID = "vault_id"
+A1000_JSON_VAULT_ID = "file_vault_id"
 A1000_JSON_URL = "url"
 A1000_JSON_HASH = "hash"
+A1000_ADV_SEARCH = "search_parameter"
 A1000_JSON_PLATFORM = "platform"
 A1000_JSON_POLL_TIMEOUT_MINS = "timeout"
+A1000_JSON_HUNTING_STATE = 'hunting_report_vault_id'
 
 A1000_ERR_UNABLE_TO_PARSE_REPLY = "Unable to parse reply from device"
 A1000_ERR_REPLY_FORMAT_KEY_MISSING = "None '{key}' missing in reply from device"
@@ -50,3 +51,21 @@ A1000_PARAM_LIST = {
 }
 # in minutes
 A1000_MAX_TIMEOUT_DEF = 10
+
+ADVANCED_SEARCH_API_URL = '/api/samples/search/'
+MAX_SEARCH_RESULTS   = 1000
+
+A1000_SAMPLE_DETAILS = [
+    'sha1',
+    'sha256',
+    'md5',
+    'classification_reason',
+    'classification_source',
+    'threat_status',
+    'threat_name',
+    'threat_level',
+    'trust_factor',
+    'av_scanners_summary',
+    'local_first_seen',
+    'local_last_seen',
+]

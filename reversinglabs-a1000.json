@@ -3,9 +3,9 @@
     "name": "RL A1000 Malware Analysis Appliance",
     "description": "This app integrates with ReversingLabs A1000 Advanced Malware Analysis appliance to automate triage and investigative actions for file samples",
     "type": "sandbox",
-    "main_module": "rla1000_connector.pyc",
-    "app_version": "1.4",
-    "utctime_updated": "2018-04-27T20:59:18.000000Z",
+    "main_module": "rla1000_connector.py",
+    "app_version": "2.3",
+    "utctime_updated": "2021-08-02T16:06:46.000000Z",
     "package_name": "phantom_rla1000",
     "product_vendor": "ReversingLabs",
     "product_name": "A1000",
@@ -15,7 +15,48 @@
     "consolidate_widgets": true,
     "logo": "logo_reversinglabs.svg",
     "logo_dark": "logo_reversinglabs_dark.svg",
-    "license": "Copyright (c) ReversingLabs Inc 2016-2018",
+    "license": "Copyright (c) ReversingLabs Inc 2016-2021",
+    "python_version": "2.7",
+    "pip_dependencies": {
+        "wheel": [
+            {
+                "module": "certifi",
+                "input_file": "wheels/certifi-2019.11.28-py2.py3-none-any.whl"
+            },
+            {
+                "module": "chardet",
+                "input_file": "wheels/chardet-3.0.4-py2.py3-none-any.whl"
+            },
+            {
+                "module": "idna",
+                "input_file": "wheels/idna-2.8-py2.py3-none-any.whl"
+            },
+            {
+                "module": "requests",
+                "input_file": "wheels/requests-2.22.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "requests_file",
+                "input_file": "wheels/requests_file-1.4.3-py2.py3-none-any.whl"
+            },
+            {
+                "module": "six",
+                "input_file": "wheels/six-1.13.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "tldextract",
+                "input_file": "wheels/tldextract-2.2.2-py2.py3-none-any.whl"
+            },
+            {
+                "module": "urllib3",
+                "input_file": "wheels/urllib3-1.25.7-py2.py3-none-any.whl"
+            },
+            {
+                "module": "rl_threat_hunting",
+                "input_file": "wheels/python_rl_threat_hunting-1.588-py2-none-any.whl"
+            }
+        ]
+    },
     "configuration": {
         "base_url": {
             "data_type": "string",
@@ -70,21 +111,10 @@
                 "enabled": false
             },
             "parameters": {
-                "vault_id": {
+                "file_vault_id": {
                     "description": "Vault ID of file to detonate",
                     "data_type": "string",
                     "order": 0,
-                    "contains": [
-                        "pe file",
-                        "pdf",
-                        "flash",
-                        "apk",
-                        "jar",
-                        "doc",
-                        "xls",
-                        "ppt",
-                        "vault id"
-                    ],
                     "required": true,
                     "primary": true
                 },
@@ -93,9 +123,12 @@
                     "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault",
                     "data_type": "string",
                     "order": 1,
-                    "contains": [
-                        "file name"
-                    ],
+                    "required": false
+                },
+                "hunting_report_vault_id": {
+                    "description": "Threat hunting report vault id",
+                    "data_type": "string",
+                    "order": 1,
                     "required": false
                 }
             },
@@ -103,7 +136,7 @@
                 "type": "custom",
                 "width": 10,
                 "height": 5,
-                "view": "reversinglabs_view.file_reputation",
+                "view": "reversinglabs_view.hunting_visualization",
                 "title": "A1000 Upload Status"
             },
             "output": [
@@ -112,86 +145,59 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.result",
-                    "data_type": "string",
-                    "example_values": [
-                        "pending",
-                        "finished"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.vault_id",
+                    "data_path": "action_result.message",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.a1000_report_url",
+                    "data_path": "action_result.data",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.threat_status",
-                    "data_type": "string",
-                    "example_values": [
-                        "malicious",
-                        "suspicious",
-                        "known",
-                        "unknown"
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary.story",
+                    "data_path": "action_result.summary",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.file_subtype",
+                    "data_path": "action_result.parameter.file_vault_id",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.file_type",
+                    "data_path": "action_result.parameter.file_name",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.local_last_seen",
-                    "data_type": "string",
-                    "example_values": [
-                        "2018-06-28T09:13:26.346734Z"
-                    ]
+                    "data_path": "action_result.parameter.hunting_report_vault_id",
+                    "data_type": "string"
                 },
+
                 {
-                    "data_path": "action_result.summary.local_first_seen",
-                    "data_type": "string",
-                    "example_values": [
-                        "2018-06-28T09:13:25.346734Z"
-                    ]
+                    "data_path": "action_result.data.*.hunting_report_vault_id",
+                    "data_type": "string"
                 },
+
+
                 {
-                    "data_path": "action_result.summary.classification_origin",
+                    "data_path": "action_result.data.*.readable_summary.classification.classification",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.file_size",
+                    "data_path": "action_result.data.*.readable_summary.classification.description",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.reason",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.threat.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.threat.description",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.threat.factor",
                     "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.summary.extracted_file_count",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.summary.classification_reason",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary.threat_level",
-                    "data_type": "numeric",
-                    "example_values": [
-                        "5, 4, 3, 2, 1, 0"
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary.trust_factor",
-                    "data_type": "numeric",
-                    "example_values": [
-                        "5, 4, 3, 2, 1, 0"
-                    ]
                 }
             ],
             "versions": "EQ(*)"
@@ -207,13 +213,10 @@
                 "enabled": false
             },
             "parameters": {
-                "vault_id": {
+                "file_vault_id": {
                     "description": "Vault ID of file to detonate",
                     "data_type": "string",
                     "order": 0,
-                    "contains": [
-                        "vault id"
-                    ],
                     "required": true,
                     "primary": true
                 },
@@ -222,9 +225,6 @@
                     "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault",
                     "data_type": "string",
                     "order": 1,
-                    "contains": [
-                        "file name"
-                    ],
                     "required": false
                 }
             },
@@ -232,10 +232,34 @@
                 "type": "custom",
                 "width": 10,
                 "height": 5,
-                "view": "reversinglabs_view.file_reputation",
+                "view": "reversinglabs_view.hunting_visualization",
                 "title": "A1000 Upload Status"
             },
             "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.file_vault_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.file_name",
+                    "data_type": "string"
+                },
                 {
                     "data_path": "action_result.summary.response",
                     "data_type": "string",
@@ -259,13 +283,10 @@
                 "enabled": false
             },
             "parameters": {
-                "vault_id": {
+                "file_vault_id": {
                     "description": "Vault ID of file to get report",
                     "data_type": "string",
                     "order": 0,
-                    "contains": [
-                        "vault id"
-                    ],
                     "required": true,
                     "primary": true
                 },
@@ -274,9 +295,12 @@
                     "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault",
                     "data_type": "string",
                     "order": 1,
-                    "contains": [
-                        "file name"
-                    ],
+                    "required": false
+                },
+                "hunting_report_vault_id": {
+                    "description": "Threat hunting report vault id",
+                    "data_type": "string",
+                    "order": 1,
                     "required": false
                 }
             },
@@ -284,7 +308,7 @@
                 "type": "custom",
                 "width": 10,
                 "height": 5,
-                "view": "reversinglabs_view.file_reputation",
+                "view": "reversinglabs_view.hunting_visualization",
                 "title": "A1000 Upload Status"
             },
             "output": [
@@ -293,117 +317,163 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.result",
-                    "data_type": "string",
-                    "example_values": [
-                        "pending",
-                        "finished"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.vault_id",
+                    "data_path": "action_result.message",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.a1000_report_url",
+                    "data_path": "action_result.data",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.threat_status",
-                    "data_type": "string",
-                    "example_values": [
-                        "malicious",
-                        "suspicious",
-                        "known",
-                        "unknown"
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary.story",
+                    "data_path": "action_result.summary",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.file_subtype",
+                    "data_path": "action_result.parameter.file_vault_id",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.file_type",
+                    "data_path": "action_result.parameter.file_name",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.local_last_seen",
-                    "data_type": "string",
-                    "example_values": [
-                        "2018-06-28T09:13:26.346734Z"
-                    ]
+                    "data_path": "action_result.parameter.hunting_report_vault_id",
+                    "data_type": "string"
                 },
+
                 {
-                    "data_path": "action_result.summary.local_first_seen",
-                    "data_type": "string",
-                    "example_values": [
-                        "2018-06-28T09:13:25.346734Z"
-                    ]
+                    "data_path": "action_result.data.*.hunting_report_vault_id",
+                    "data_type": "string"
                 },
+
+
                 {
-                    "data_path": "action_result.summary.classification_origin",
+                    "data_path": "action_result.data.*.readable_summary.classification.classification",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.summary.file_size",
+                    "data_path": "action_result.data.*.readable_summary.classification.description",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.reason",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.threat.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.threat.description",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.threat.factor",
                     "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.summary.extracted_file_count",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.summary.classification_reason",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary.threat_level",
-                    "data_type": "numeric",
-                    "example_values": [
-                        "5, 4, 3, 2, 1, 0"
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary.trust_factor",
-                    "data_type": "numeric",
-                    "example_values": [
-                        "5, 4, 3, 2, 1, 0"
-                    ]
                 }
             ],
             "versions": "EQ(*)"
-        }
-    ],
-    "pip_dependencies": {
-        "wheel": [
-            {
-                "module": "certifi",
-                "input_file": "wheels/certifi-2021.10.8-py2.py3-none-any.whl"
+        },
+        {
+            "action": "local advanced search",
+            "description": "Queries A1000 instance with a specified Advanced Search query.",
+            "type": "investigate",
+            "identifier": "local_adv_search",
+            "read_only": true,
+            "lock": {
+                "enabled": false,
+                "data_path": "parameters.hunting_report_vault_id"
             },
-            {
-                "module": "chardet",
-                "input_file": "wheels/chardet-3.0.4-py2.py3-none-any.whl"
+            "parameters": {
+                "search_parameter": {
+                    "description": "Advanced Search query search field",
+                    "data_type": "string",
+                    "order": 0,
+                    "required": false
+                },
+                "results_per_page": {
+                    "description": "Number of results per one page - default:1000",
+                    "data_type": "string",
+                    "order": 1,
+                    "required": false
+                },
+                "page_number": {
+                    "description": "Page number - default:1",
+                    "data_type": "string",
+                    "order": 2,
+                    "required": false
+                },
+                "hunting_report_vault_id": {
+                    "description": "Threat hunting report vault id",
+                    "data_type": "string",
+                    "order": 3,
+                    "required": false
+                }
             },
-            {
-                "module": "idna",
-                "input_file": "wheels/idna-2.10-py2.py3-none-any.whl"
-            },
-            {
-                "module": "python_magic",
-                "input_file": "wheels/python_magic-0.4.18-py2.py3-none-any.whl"
-            },
-            {
-                "module": "requests",
-                "input_file": "wheels/requests-2.25.0-py2.py3-none-any.whl"
-            },
-            {
-                "module": "urllib3",
-                "input_file": "wheels/urllib3-1.26.7-py2.py3-none-any.whl"
+            "output": [
+                {
+                    "data_path": "action_result.data",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.search_parameter",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.hunting_report_vault_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.hunting_report_vault_id",
+                    "data_type": "string"
+                },
+
+
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.classification",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.description",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.reason",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.threat.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.threat.description",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.readable_summary.classification.threat.factor",
+                    "data_type": "numeric"
+                }
+            ],
+            "versions": "EQ(*)",
+            "render": {
+                "type": "custom",
+                "width": 10,
+                "height": 5,
+                "view": "reversinglabs_view.hunting_visualization",
+                "title": "FILE REPUTATION"
             }
-        ]
-    }
+        }
+    ]
 }
