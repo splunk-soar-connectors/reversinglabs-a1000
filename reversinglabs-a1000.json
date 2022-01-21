@@ -107,7 +107,7 @@
         {
             "action": "detonate file",
             "description": "Analyze the file in the A1000 Advanced Malware Analysis Appliance and retrieve the analysis results",
-            "verbose": "This action requires the input file to be present in the vault and therefore takes the vault id as the input parameter",
+            "verbose": "This action requires the input file to be present in the vault and therefore takes the vault id as the input parameter.",
             "type": "investigate",
             "identifier": "detonate_file",
             "read_only": true,
@@ -124,7 +124,7 @@
                 },
                 "file_name": {
                     "description": "Filename to use",
-                    "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault",
+                    "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault.",
                     "data_type": "string",
                     "order": 1,
                     "required": false
@@ -177,8 +177,6 @@
                     "data_path": "action_result.data.*.hunting_report_vault_id",
                     "data_type": "string"
                 },
-
-
                 {
                     "data_path": "action_result.data.*.readable_summary.classification.classification",
                     "data_type": "string"
@@ -202,6 +200,14 @@
                 {
                     "data_path": "action_result.data.*.readable_summary.classification.threat.factor",
                     "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
                 }
             ],
             "versions": "EQ(*)"
@@ -209,7 +215,7 @@
         {
             "action": "reanalyze file",
             "description": "Reanalyze the file in the A1000 Advanced Malware Analysis Appliance",
-            "verbose": "This action requires the input file to be present in the vault and therefore takes the vault id as the input parameter",
+            "verbose": "This action requires the input file to be present in the vault and therefore takes the vault id as the input parameter.",
             "type": "investigate",
             "identifier": "reanalyze_file",
             "read_only": true,
@@ -226,7 +232,7 @@
                 },
                 "file_name": {
                     "description": "Filename to use",
-                    "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault",
+                    "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault.",
                     "data_type": "string",
                     "order": 1,
                     "required": false
@@ -272,6 +278,14 @@
                         "Sample is queued for analysis.",
                         "Sample is already queued for analysis"
                     ]
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
                 }
             ],
             "versions": "EQ(*)"
@@ -296,7 +310,7 @@
                 },
                 "file_name": {
                     "description": "Filename to use",
-                    "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault",
+                    "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault.",
                     "data_type": "string",
                     "order": 1,
                     "required": false
@@ -344,13 +358,10 @@
                     "data_path": "action_result.parameter.hunting_report_vault_id",
                     "data_type": "string"
                 },
-
                 {
                     "data_path": "action_result.data.*.hunting_report_vault_id",
                     "data_type": "string"
                 },
-
-
                 {
                     "data_path": "action_result.data.*.readable_summary.classification.classification",
                     "data_type": "string"
@@ -374,13 +385,21 @@
                 {
                     "data_path": "action_result.data.*.readable_summary.classification.threat.factor",
                     "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
                 }
             ],
             "versions": "EQ(*)"
         },
         {
             "action": "local advanced search",
-            "description": "Queries A1000 instance with a specified Advanced Search query.",
+            "description": "Queries A1000 instance with a specified Advanced Search query",
             "type": "investigate",
             "identifier": "local_adv_search",
             "read_only": true,
@@ -443,8 +462,6 @@
                     "data_path": "action_result.data.*.hunting_report_vault_id",
                     "data_type": "string"
                 },
-
-
                 {
                     "data_path": "action_result.data.*.readable_summary.classification.classification",
                     "data_type": "string"
@@ -467,6 +484,14 @@
                 },
                 {
                     "data_path": "action_result.data.*.readable_summary.classification.threat.factor",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
                     "data_type": "numeric"
                 }
             ],
