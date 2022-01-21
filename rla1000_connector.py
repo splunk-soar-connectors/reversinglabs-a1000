@@ -29,14 +29,9 @@ import json
 # Other imports used by this connector
 import os
 import re
-import shutil
-import sys
 import time
-import traceback
-# import xmltodict
-import uuid
 
-import magic
+# import xmltodict
 import requests
 from requests import ConnectionError, HTTPError
 # Wheels import
@@ -187,32 +182,25 @@ class A1000Connector(BaseConnector):
 
         if method == 'post':
             try:
-                r = requests.post(url,
-                                  data=data,
-                                  files=files,
-                                  verify=config[phantom.APP_JSON_VERIFY],
-                                  headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY], 'User-Agent': 'ReversingLabs Phantom A1000 v2.2'})
+                r = requests.post(
+                    url,
+                    timeout=10,
+                    data=data,
+                    files=files,
+                    verify=config[phantom.APP_JSON_VERIFY],
+                    headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY],
+                    'User-Agent': 'ReversingLabs Phantom A1000 v2.2'})
             except Exception as e:
-                return (
-                    result.set_status(
-                        phantom.APP_ERROR,
-                        "REST Api to server failed",
-                        e),
-                    None)
+                return (result.set_status(phantom.APP_ERROR, "REST Api to server failed", e), None)
         else:
             try:
                 r = requests.get(
                     url,
+                    timeout=10,
                     verify=config[phantom.APP_JSON_VERIFY],
-                    headers={
-                        'Authorization': 'Token %s' % config[A1000_JSON_API_KEY], 'User-Agent': 'ReversingLabs Phantom A1000 v2.2'})
+                    headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY], 'User-Agent': 'ReversingLabs Phantom A1000 v2.2'})
             except Exception as e:
-                return (
-                    result.set_status(
-                        phantom.APP_ERROR,
-                        "REST Api to server failed",
-                        e),
-                    None)
+                return (result.set_status(phantom.APP_ERROR, "REST Api to server failed", e), None)
 
         # It's ok if r.text is None, dump that
         if (hasattr(result, 'add_debug_data')):
@@ -226,7 +214,6 @@ class A1000Connector(BaseConnector):
 
         # Look for errors
         if not 200 <= r.status_code < 300:  # pylint: disable=E1101
-            #self._parse_error(r, result, error_desc)
             return (phantom.APP_ERROR, r)
 
         if (not parse_response):
@@ -361,8 +348,11 @@ class A1000Connector(BaseConnector):
                 summary_data["story"] = ticore_response["story"]
 
             # remove hashes other than sha1
-            if summary_data is not None and 'classification_origin' in summary_data and summary_data['classification_origin'] is not None and 'sha1' in summary_data['classification_origin']:
-                summary_data['classification_origin'] = {'sha1': summary_data['classification_origin']['sha1']}
+            if summary_data is not None:
+                if 'classification_origin' in summary_data:
+                    if summary_data['classification_origin'] is not None:
+                        if 'sha1' in summary_data['classification_origin']:
+                            summary_data['classification_origin'] = {'sha1': summary_data['classification_origin']['sha1']}
 
         return {"ticloud": ticloud_response}, {"ticore": [ticore_response, ef_response]}, hunting_meta, summary_data
 
@@ -396,6 +386,7 @@ class A1000Connector(BaseConnector):
         endpoint = self._base_url + '/api/samples/{}/ticore/'.format(sample_sha1)
         config = self.get_config()
         response = requests.get(endpoint,
+                                timeout=10,
                                 headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY],
                                     'User-Agent': 'ReversingLabs Phantom A1000 v2.2'},
                                 verify=config[phantom.APP_JSON_VERIFY])
@@ -410,6 +401,7 @@ class A1000Connector(BaseConnector):
         }
         config = self.get_config()
         response = requests.post(endpoint,
+                                timeout=10,
                                 data=json.dumps(post_data),
                                 headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY],
                                          'Content-Type': 'application/json',
@@ -474,7 +466,7 @@ class A1000Connector(BaseConnector):
         except:
             action_result.add_data({"test": "fail"})
 
-        #ret_val, response = self._poll_task_status(task_id, action_result)
+        # ret_val, response = self._poll_task_status(task_id, action_result)
 
         try:
             action_result.add_data(ticloud)
@@ -508,7 +500,7 @@ class A1000Connector(BaseConnector):
         vault_id = param[A1000_JSON_VAULT_ID]  # sha1
 
         data = {'analysis': 'cloud'}
-        #data = {'hash_value': [vault_id], 'analysis': 'cloud'}
+        # data = {'hash_value': [vault_id], 'analysis': 'cloud'}
 
         ret_val, response = self._make_rest_call(
             '/api/samples/%s/analyze/' % vault_id, action_result, self.GET_REPORT_ERROR_DESC,
@@ -589,11 +581,8 @@ class A1000Connector(BaseConnector):
             return action_result.get_status()
 
         data = action_result.add_data({})
-        self.save_progress(
-            'Checking for prior detonations for' +
-            vault_id +
-            ' sha256 ' +
-            sha256)
+        self.save_progress('Checking for prior detonations for' + vault_id + ' sha256 ' + sha256)
+
         # check if there is existing report already
         ticloud, ticore, hunting_meta, summary_data = self._check_detonated_report(vault_id, action_result, threat_hunting_state)
 
@@ -607,7 +596,6 @@ class A1000Connector(BaseConnector):
             ret_val, response = self._make_rest_call(
                 '/api/uploads/', action_result, self.FILE_UPLOAD_ERROR_DESC,
                 method='post', filein=files['file'][1])
-            startTime = time.time()
 
             if (phantom.is_fail(ret_val)):
                 return self.get_status()
@@ -634,8 +622,6 @@ class A1000Connector(BaseConnector):
 
                 data.update(data)
 
-            analyze_time = round(time.time() - startTime, 3)
-
             # Add the report
             try:
                 polling_attempt = 0
@@ -653,12 +639,12 @@ class A1000Connector(BaseConnector):
 
                 hunting_meta_vault_id = self._store_threat_hunting_state(hunting_meta)
                 self._update_threat_hunting_state(action_result, hunting_meta, hunting_meta_vault_id)
-            except Exception as err:
-                msg = str(traceback.format_exc())
-                msg = msg + " INFO: "
-                msg = msg + str(sys.exc_info()[2])
-                return action_result.set_status(phantom.APP_ERROR, msg)
-                # error
+            except Exception as e:
+                self.debug_print('Handled exception', e)
+                return (action_result.set_status(
+                        phantom.APP_ERROR,
+                        "Unable to get meta info of vault file"),
+                        None)
 
             if (phantom.is_fail(ret_val)):
                 return action_result.get_status()
@@ -674,7 +660,7 @@ class A1000Connector(BaseConnector):
             except:
                 action_result.add_data({"test0": "fail"})
 
-            #ret_val, response = self._poll_task_status(task_id, action_result)
+            # ret_val, response = self._poll_task_status(task_id, action_result)
 
             try:
                 action_result.add_data(ticloud)
@@ -758,9 +744,10 @@ class A1000Connector(BaseConnector):
         config = self.get_config()
         post_data = {'query': search_term, 'page': page_number or 1, 'records_per_page': results_per_page or MAX_SEARCH_RESULTS}
         response = requests.post(self._search_url,
-                                  data=json.dumps(post_data),
-                                  verify=config[phantom.APP_JSON_VERIFY],
-                                  headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY],
+                                timeout=10,
+                                data=json.dumps(post_data),
+                                verify=config[phantom.APP_JSON_VERIFY],
+                                headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY],
                                            'Content-Type': 'application/json',
                                            'User-Agent': 'ReversingLabs Phantom A1000 v2.2'}
                                  )
@@ -777,7 +764,7 @@ class A1000Connector(BaseConnector):
             success, msg, files_array = ph_rules.vault_info(vault_id=hunting_report_vault_id)
             file_data = list(files_array)[0]
             payload = open(file_data['path'], 'rb').read()
-            return json.loads(payload.decode('utf-8'))
+            return json.loads(payload), hunting_report_vault_id
 
         return None, None
 
@@ -825,24 +812,16 @@ class A1000Connector(BaseConnector):
 
         self.debug_print("action_id", self.get_action_identifier())
 
-        try:
-            if (action_id == self.ACTION_ID_DETONATE_FILE):
-                ret_val = self._detonate_file(param)
-            elif (action_id == self.ACTION_ID_GET_REPORT):
-                ret_val = self._get_report(param)
-            elif (action_id == self.ACTION_ID_REANALYZE_FILE):
-                ret_val = self._reanalyze_file(param)
-            elif (action_id == self.ACTION_ID_TEST_ASSET_CONNECTIVITY):
-                ret_val = self._test_connectivity(param)
-            elif (action_id == self.ACTION_ID_ADVANCED_SEARCH):
-                ret_val = self._local_advanced_search(param)
-        except Exception as err:
-            action_result = self.add_action_result(ActionResult(dict(param)))
-            msg = str(traceback.format_exc())
-            msg = msg + " INFO: "
-            msg = msg + str(sys.exc_info()[2])
-            return action_result.set_status(phantom.APP_ERROR, msg)  # str(err))
-
+        if (action_id == self.ACTION_ID_DETONATE_FILE):
+            ret_val = self._detonate_file(param)
+        elif (action_id == self.ACTION_ID_GET_REPORT):
+            ret_val = self._get_report(param)
+        elif (action_id == self.ACTION_ID_REANALYZE_FILE):
+            ret_val = self._reanalyze_file(param)
+        elif (action_id == self.ACTION_ID_TEST_ASSET_CONNECTIVITY):
+            ret_val = self._test_connectivity(param)
+        elif (action_id == self.ACTION_ID_ADVANCED_SEARCH):
+            ret_val = self._local_advanced_search(param)
         return ret_val
 
 
