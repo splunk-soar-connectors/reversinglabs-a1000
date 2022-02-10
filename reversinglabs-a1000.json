@@ -10,7 +10,7 @@
     "product_vendor": "ReversingLabs",
     "product_name": "A1000",
     "product_version_regex": ".*",
-    "min_phantom_version": "5.0.0",
+    "min_phantom_version": "5.1.0",
     "publisher": "ReversingLabs",
     "consolidate_widgets": true,
     "logo": "logo_reversinglabs.svg",
@@ -20,44 +20,56 @@
     "pip_dependencies": {
         "wheel": [
             {
+                "module": "beautifulsoup4",
+                "input_file": "wheels/py3/beautifulsoup4-4.9.1-py3-none-any.whl"
+            },
+            {
                 "module": "certifi",
-                "input_file": "wheels/certifi-2021.5.30-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/certifi-2021.10.8-py2.py3-none-any.whl"
             },
             {
                 "module": "chardet",
-                "input_file": "wheels/chardet-4.0.0-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/chardet-3.0.4-py2.py3-none-any.whl"
             },
             {
                 "module": "filelock",
-                "input_file": "wheels/filelock-3.0.12-py3-none-any.whl"
+                "input_file": "wheels/py3/filelock-3.4.1-py3-none-any.whl"
             },
             {
                 "module": "idna",
-                "input_file": "wheels/idna-3.2-py3-none-any.whl"
+                "input_file": "wheels/shared/idna-2.10-py2.py3-none-any.whl"
+            },
+            {
+                "module": "python_magic",
+                "input_file": "wheels/shared/python_magic-0.4.18-py2.py3-none-any.whl"
+            },
+            {
+                "module": "python_rl_threat_hunting",
+                "input_file": "wheels/py3/python_rl_threat_hunting-1.588-py3-none-any.whl"
             },
             {
                 "module": "requests",
-                "input_file": "wheels/requests-2.25.1-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/requests-2.25.0-py2.py3-none-any.whl"
             },
             {
                 "module": "requests_file",
-                "input_file": "wheels/requests_file-1.5.1-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/requests_file-1.5.1-py2.py3-none-any.whl"
             },
             {
                 "module": "six",
-                "input_file": "wheels/six-1.16.0-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/six-1.16.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "soupsieve",
+                "input_file": "wheels/py3/soupsieve-2.3.1-py3-none-any.whl"
             },
             {
                 "module": "tldextract",
-                "input_file": "wheels/tldextract-3.1.0-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/tldextract-3.1.2-py2.py3-none-any.whl"
             },
             {
                 "module": "urllib3",
-                "input_file": "wheels/urllib3-1.26.7-py2.py3-none-any.whl"
-            },
-            {
-                "module": "rl_threat_hunting",
-                "input_file": "wheels/python_rl_threat_hunting-1.588-py3-none-any.whl"
+                "input_file": "wheels/shared/urllib3-1.26.8-py2.py3-none-any.whl"
             }
         ]
     },
@@ -72,7 +84,6 @@
         "verify_server_cert": {
             "data_type": "boolean",
             "description": "Verify server certificate",
-            "required": true,
             "order": 1,
             "default": true
         },
@@ -120,20 +131,24 @@
                     "data_type": "string",
                     "order": 0,
                     "required": true,
-                    "primary": true
+                    "primary": true,
+                    "contains": [
+                        "vault id"
+                    ]
                 },
                 "file_name": {
                     "description": "Filename to use",
-                    "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault.",
                     "data_type": "string",
-                    "order": 1,
-                    "required": false
+                    "order": 1
                 },
                 "hunting_report_vault_id": {
                     "description": "Threat hunting report vault id",
                     "data_type": "string",
                     "order": 2,
-                    "required": false
+                    "primary": true,
+                    "contains": [
+                        "vault id"
+                    ]
                 }
             },
             "render": {
@@ -145,34 +160,23 @@
             },
             "output": [
                 {
-                    "data_path": "action_result.status",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.parameter.file_vault_id",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.parameter.file_name",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.parameter.hunting_report_vault_id",
-                    "data_type": "string"
+                    "data_path": "action_result.parameter.file_vault_id",
+                    "data_type": "string",
+                    "contains": [
+                        "vault id"
+                    ]
                 },
-
+                {
+                    "data_path": "action_result.parameter.hunting_report_vault_id",
+                    "data_type": "string",
+                    "contains": [
+                        "vault id"
+                    ]
+                },
                 {
                     "data_path": "action_result.data.*.hunting_report_vault_id",
                     "data_type": "string"
@@ -202,12 +206,34 @@
                     "data_type": "numeric"
                 },
                 {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
                     "data_path": "summary.total_objects",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
                 },
                 {
                     "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
                 }
             ],
             "versions": "EQ(*)"
@@ -228,14 +254,15 @@
                     "data_type": "string",
                     "order": 0,
                     "required": true,
-                    "primary": true
+                    "primary": true,
+                    "contains": [
+                        "vault id"
+                    ]
                 },
                 "file_name": {
                     "description": "Filename to use",
-                    "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault.",
                     "data_type": "string",
-                    "order": 1,
-                    "required": false
+                    "order": 1
                 }
             },
             "render": {
@@ -247,27 +274,30 @@
             },
             "output": [
                 {
-                    "data_path": "action_result.status",
+                    "data_path": "action_result.parameter.file_name",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
+                    "data_path": "action_result.parameter.file_vault_id",
+                    "data_type": "string",
+                    "contains": [
+                        "vault id"
+                    ]
                 },
                 {
                     "data_path": "action_result.data",
                     "data_type": "string"
                 },
                 {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
                     "data_path": "action_result.summary",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.parameter.file_vault_id",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.parameter.file_name",
                     "data_type": "string"
                 },
                 {
@@ -280,12 +310,22 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
                     "data_path": "summary.total_objects",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
                 },
                 {
                     "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
                 }
             ],
             "versions": "EQ(*)"
@@ -306,20 +346,24 @@
                     "data_type": "string",
                     "order": 0,
                     "required": true,
-                    "primary": true
+                    "primary": true,
+                    "contains": [
+                        "vault id"
+                    ]
                 },
                 "file_name": {
                     "description": "Filename to use",
-                    "verbose": "This value will be passed to the sandbox as the name of the file that is pickup up from the vault.",
                     "data_type": "string",
-                    "order": 1,
-                    "required": false
+                    "order": 1
                 },
                 "hunting_report_vault_id": {
                     "description": "Threat hunting report vault id",
                     "data_type": "string",
                     "order": 2,
-                    "required": false
+                    "primary": true,
+                    "contains": [
+                        "vault id"
+                    ]
                 }
             },
             "render": {
@@ -331,36 +375,29 @@
             },
             "output": [
                 {
-                    "data_path": "action_result.status",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.parameter.file_vault_id",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.parameter.file_name",
                     "data_type": "string"
                 },
                 {
+                    "data_path": "action_result.parameter.file_vault_id",
+                    "data_type": "string",
+                    "contains": [
+                        "vault id"
+                    ]
+                },
+                {
                     "data_path": "action_result.parameter.hunting_report_vault_id",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "contains": [
+                        "vault id"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.hunting_report_vault_id",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "contains": [
+                        "vault id"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.readable_summary.classification.classification",
@@ -375,10 +412,6 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.readable_summary.classification.threat.name",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.data.*.readable_summary.classification.threat.description",
                     "data_type": "string"
                 },
@@ -387,12 +420,38 @@
                     "data_type": "numeric"
                 },
                 {
+                    "data_path": "action_result.data.*.readable_summary.classification.threat.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
                     "data_path": "summary.total_objects",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
                 },
                 {
                     "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
                 }
             ],
             "versions": "EQ(*)"
@@ -411,56 +470,54 @@
                 "search_parameter": {
                     "description": "Advanced Search query search field",
                     "data_type": "string",
-                    "order": 0,
-                    "required": false
+                    "order": 0
                 },
                 "results_per_page": {
                     "description": "Number of results per one page - default:1000",
-                    "data_type": "string",
-                    "order": 1,
-                    "required": false
+                    "data_type": "numeric",
+                    "order": 1
                 },
                 "page_number": {
                     "description": "Page number - default:1",
-                    "data_type": "string",
-                    "order": 2,
-                    "required": false
+                    "data_type": "numeric",
+                    "order": 2
                 },
                 "hunting_report_vault_id": {
                     "description": "Threat hunting report vault id",
                     "data_type": "string",
                     "order": 3,
-                    "required": false
+                    "primary": true,
+                    "contains": [
+                        "vault id"
+                    ]
                 }
             },
             "output": [
                 {
-                    "data_path": "action_result.data",
-                    "data_type": "string"
+                    "data_path": "action_result.parameter.hunting_report_vault_id",
+                    "data_type": "string",
+                    "contains": [
+                        "vault id"
+                    ]
                 },
                 {
-                    "data_path": "action_result.status",
-                    "data_type": "string"
+                    "data_path": "action_result.parameter.page_number",
+                    "data_type": "numeric"
                 },
                 {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary",
-                    "data_type": "string"
+                    "data_path": "action_result.parameter.results_per_page",
+                    "data_type": "numeric"
                 },
                 {
                     "data_path": "action_result.parameter.search_parameter",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.parameter.hunting_report_vault_id",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.data.*.hunting_report_vault_id",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "contains": [
+                        "vault id"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.readable_summary.classification.classification",
@@ -475,10 +532,6 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.readable_summary.classification.threat.name",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.data.*.readable_summary.classification.threat.description",
                     "data_type": "string"
                 },
@@ -487,12 +540,38 @@
                     "data_type": "numeric"
                 },
                 {
+                    "data_path": "action_result.data.*.readable_summary.classification.threat.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
                     "data_path": "summary.total_objects",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
                 },
                 {
                     "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
                 }
             ],
             "versions": "EQ(*)",
@@ -504,5 +583,61 @@
                 "title": "FILE REPUTATION"
             }
         }
-    ]
+    ],
+    "pip39_dependencies": {
+        "wheel": [
+            {
+                "module": "beautifulsoup4",
+                "input_file": "wheels/py3/beautifulsoup4-4.9.1-py3-none-any.whl"
+            },
+            {
+                "module": "certifi",
+                "input_file": "wheels/shared/certifi-2021.10.8-py2.py3-none-any.whl"
+            },
+            {
+                "module": "chardet",
+                "input_file": "wheels/shared/chardet-3.0.4-py2.py3-none-any.whl"
+            },
+            {
+                "module": "filelock",
+                "input_file": "wheels/py3/filelock-3.4.2-py3-none-any.whl"
+            },
+            {
+                "module": "idna",
+                "input_file": "wheels/shared/idna-2.10-py2.py3-none-any.whl"
+            },
+            {
+                "module": "python_magic",
+                "input_file": "wheels/shared/python_magic-0.4.18-py2.py3-none-any.whl"
+            },
+            {
+                "module": "python_rl_threat_hunting",
+                "input_file": "wheels/py3/python_rl_threat_hunting-1.588-py3-none-any.whl"
+            },
+            {
+                "module": "requests",
+                "input_file": "wheels/shared/requests-2.25.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "requests_file",
+                "input_file": "wheels/shared/requests_file-1.5.1-py2.py3-none-any.whl"
+            },
+            {
+                "module": "six",
+                "input_file": "wheels/shared/six-1.16.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "soupsieve",
+                "input_file": "wheels/py3/soupsieve-2.3.1-py3-none-any.whl"
+            },
+            {
+                "module": "tldextract",
+                "input_file": "wheels/shared/tldextract-3.1.2-py2.py3-none-any.whl"
+            },
+            {
+                "module": "urllib3",
+                "input_file": "wheels/shared/urllib3-1.26.8-py2.py3-none-any.whl"
+            }
+        ]
+    }
 }

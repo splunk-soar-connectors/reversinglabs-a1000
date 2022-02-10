@@ -15,6 +15,7 @@
 #
 
 # Phantom imports
+# from jwt import PyJWKClient
 import phantom.app as phantom
 import phantom.rules as ph_rules
 from phantom.app import ActionResult, BaseConnector
@@ -33,11 +34,20 @@ import time
 
 # import xmltodict
 import requests
+from bs4 import BeautifulSoup
 from requests import ConnectionError, HTTPError
 # Wheels import
 from rl_threat_hunting import child_evaluation, file_report, local, local_reputation, tc_metadata_adapter
 
 from rla1000_consts import *
+
+
+class RetVal(tuple):
+    """Represent a class to create a tuple."""
+
+    def __new__(cls, val1, val2=None):
+        """Create a tuple from the provided values."""
+        return tuple.__new__(RetVal, (val1, val2))
 
 
 class A1000Connector(BaseConnector):
@@ -116,9 +126,63 @@ class A1000Connector(BaseConnector):
 
         # self._req_sess = requests.Session()
 
-        self._search_url = self._base_url + ADVANCED_SEARCH_API_URL
+        self._search_url = "{}{}".format(self._base_url, ADVANCED_SEARCH_API_URL)
 
         return phantom.APP_SUCCESS
+
+    def _validate_integer(self, action_result, parameter, key):
+        """
+        Validate an integer.
+
+        :param action_result: Action result or BaseConnector object
+        :param parameter: input parameter
+        :param key: input parameter message key
+        :return: status phantom.APP_ERROR/phantom.APP_SUCCESS, integer value of the parameter or None in case of failure
+        """
+        if parameter is not None:
+            try:
+                if not float(parameter).is_integer():
+                    return (
+                        action_result.set_status(phantom.APP_ERROR, A1000_VALID_INT_MSG.format(param=key)),
+                        None,
+                    )
+
+                parameter = int(parameter)
+            except Exception:
+                return action_result.set_status(phantom.APP_ERROR, A1000_VALID_INT_MSG.format(param=key)), None
+
+            # Negative value validation
+            if parameter < 0:
+                return action_result.set_status(phantom.APP_ERROR, A1000_NON_NEG_INT_MSG.format(param=key)), None
+
+        return phantom.APP_SUCCESS, parameter
+
+    def _get_error_message_from_exception(self, e):
+        """
+        Get appropriate error message from the exception.
+
+        :param e: Exception object
+        :return: error message
+        """
+        error_code = None
+        error_msg = ERR_MSG_UNAVAILABLE
+
+        try:
+            if hasattr(e, "args"):
+                if len(e.args) > 1:
+                    error_code = e.args[0]
+                    error_msg = e.args[1]
+                elif len(e.args) == 1:
+                    error_msg = e.args[0]
+        except Exception:
+            pass
+
+        if not error_code:
+            error_text = "Error Message: {}".format(error_msg)
+        else:
+            error_text = "Error Code: {}. Error Message: {}".format(error_code, error_msg)
+
+        return error_text
 
     def _parse_error(self, response, result, error_desc):
 
@@ -150,6 +214,140 @@ class A1000Connector(BaseConnector):
             A1000_ERR_REST_API.format(
                 status_code=status_code,
                 detail=detail))
+
+    def _process_empty_response(self, response, action_result):
+        """
+        Process empty response.
+
+        :param response: response object
+        :param action_result: object of Action Result
+        :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message)
+        """
+        if response.status_code == 200 or response.status_code == 204:
+            return RetVal(phantom.APP_SUCCESS, {})
+
+        return RetVal(
+            action_result.set_status(
+                phantom.APP_ERROR, A1000_ERR_EMPTY_RESPONSE.format(code=response.status_code)
+            ),
+            None,
+        )
+
+    def _process_html_response(self, response, action_result):
+        """
+        Process html response.
+
+        :param response: response object
+        :param action_result: object of Action Result
+        :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message)
+        """
+        # An html response, treat it like an error
+        status_code = response.status_code
+
+        try:
+            soup = BeautifulSoup(response.text, "html.parser")
+            # Remove the script, style, footer and navigation part from the HTML message
+            for element in soup(["script", "style", "footer", "nav"]):
+                element.extract()
+            error_text = soup.text
+            split_lines = error_text.split("\n")
+            split_lines = [x.strip() for x in split_lines if x.strip()]
+            error_text = "\n".join(split_lines)
+        except Exception:
+            error_text = A1000_UNABLE_TO_PARSE_ERR_DETAIL
+
+        if not error_text:
+            error_text = "Empty response and no information received"
+        message = "Status Code: {}. Data from server: {}".format(status_code, error_text)
+
+        message = message.replace("{", "{{").replace("}", "}}")
+        return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
+
+    def _process_json_response(self, r, action_result):
+        """
+        Process json response.
+
+        :param r: response object
+        :param action_result: object of Action Result
+        :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message)
+        """
+        status_code = r.status_code
+        # Try a json parse
+        try:
+            resp_json = r.json()
+        except Exception as e:
+            error_msg = self._get_error_message_from_exception(e)
+            return RetVal(
+                action_result.set_status(
+                    phantom.APP_ERROR, A1000_ERR_UNABLE_TO_PARSE_JSON_RESPONSE.format(error=error_msg)
+                ),
+                None,
+            )
+
+        errors = resp_json.get("errors", [])
+        if errors and isinstance(errors, list):
+            try:
+                error_msg = ". ".join([error.get("message") for error in errors if error.get("message")])
+                if error_msg:
+                    message = "Error from server. Status Code: {}. Error Details: {}".format(status_code, error_msg)
+                    return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
+            except Exception:
+                pass
+
+        # Please specify the status codes here
+        if 200 <= r.status_code < 300:
+            return RetVal(phantom.APP_SUCCESS, resp_json)
+
+        if resp_json.get("name") and resp_json.get("message"):
+            message = "Error from server. Error Code: {}. Error Message: {}".format(
+                resp_json["name"], resp_json["message"]
+            )
+            return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
+
+        # You should process the error returned in the json
+        error_text = r.text.replace("{", "{{").replace("}", "}}")
+        message = "Error from server. Status Code: {}. Data from server: {}".format(status_code, error_text)
+
+        return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
+
+    def _process_response(self, r, action_result):
+        """
+        Process API response.
+
+        :param r: response object
+        :param action_result: object of Action Result
+        :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message)
+        """
+        # store the r_text in debug data, it will get dumped in the logs if the action fails
+        if hasattr(action_result, "add_debug_data"):
+            action_result.add_debug_data({"r_status_code": r.status_code})
+            action_result.add_debug_data({"r_text": r.text})
+            action_result.add_debug_data({"r_headers": r.headers})
+
+        # Process each 'Content-Type' of response separately
+
+        # Process a json response
+        if "json" in r.headers.get("Content-Type", ""):
+            return self._process_json_response(r, action_result)
+
+        # Process an HTML response, Do this no matter what the api talks.
+        # There is a high chance of a PROXY in between phantom and the rest of
+        # world, in case of errors, PROXY's return HTML, this function parses
+        # the error and adds it to the action_result.
+        if "html" in r.headers.get("Content-Type", ""):
+            return self._process_html_response(r, action_result)
+
+        # it's not content-type that is to be parsed, handle an empty response
+        if not r.text:
+            return self._process_empty_response(r, action_result)
+
+        # everything else is actually an error at this point
+        error_text = r.text.replace("{", "{{").replace("}", "}}")
+        message = "Can't process response from server. Status Code: {} Data from server: {}".format(
+            r.status_code, error_text
+        )
+
+        return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
 
     def _make_rest_call(
             self,
@@ -191,7 +389,8 @@ class A1000Connector(BaseConnector):
                     headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY],
                     'User-Agent': 'ReversingLabs Phantom A1000 v2.2'})
             except Exception as e:
-                return (result.set_status(phantom.APP_ERROR, "REST Api to server failed", e), None)
+                err = self._get_error_message_from_exception(e)
+                return result.set_status(phantom.APP_ERROR, "REST Api to server failed {}".format(err)), None
         else:
             try:
                 r = requests.get(
@@ -200,7 +399,8 @@ class A1000Connector(BaseConnector):
                     verify=config[phantom.APP_JSON_VERIFY],
                     headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY], 'User-Agent': 'ReversingLabs Phantom A1000 v2.2'})
             except Exception as e:
-                return (result.set_status(phantom.APP_ERROR, "REST Api to server failed", e), None)
+                err = self._get_error_message_from_exception(e)
+                return result.set_status(phantom.APP_ERROR, "REST Api to server failed {}".format(err)), None
 
         # It's ok if r.text is None, dump that
         if (hasattr(result, 'add_debug_data')):
@@ -208,20 +408,12 @@ class A1000Connector(BaseConnector):
 
         if (r.status_code in additional_succ_codes):
             response = additional_succ_codes[r.status_code]
-            return (
-                phantom.APP_SUCCESS,
-                response if response is not None else r.text)
-
-        # Look for errors
-        if not 200 <= r.status_code < 300:  # pylint: disable=E1101
-            return (phantom.APP_ERROR, r)
+            return phantom.APP_SUCCESS, response if response is not None else r.text
 
         if (not parse_response):
-            return (phantom.APP_SUCCESS, r)
+            return phantom.APP_SUCCESS, r
 
-        response_dict = json.loads(r.text)
-
-        return (phantom.APP_SUCCESS, response_dict)
+        return self._process_response(r, result)
 
     def _get_file_dict(self, param, action_result):
 
@@ -252,6 +444,9 @@ class A1000Connector(BaseConnector):
         return (phantom.APP_SUCCESS, files)
 
     def _test_connectivity(self, param):
+
+        action_result = self.add_action_result(phantom.ActionResult(dict(param)))
+
         # get the file from the app directory
         dirpath = os.path.dirname(inspect.getfile(self.__class__))
         filename = A1000_TEST_PDF_FILE
@@ -261,10 +456,10 @@ class A1000Connector(BaseConnector):
         try:
             payload = open(filepath, 'rb')
         except BaseException:
-            self.set_status(phantom.APP_ERROR,
+            action_result.set_status(phantom.APP_ERROR,
                             'Test pdf file not found at "{}"'.format(filepath))
-            self.append_to_message('Test Connectivity failed')
-            return self.get_status()
+            action_result.append_to_message('Test Connectivity failed')
+            return action_result.get_status()
 
         try:
             self.save_progress(
@@ -274,17 +469,17 @@ class A1000Connector(BaseConnector):
                 '/api/uploads/', self, self.FILE_UPLOAD_ERROR_DESC,
                 method='post', filein=files)
         except BaseException:
-            self.set_status(
+            action_result.set_status(
                 phantom.APP_ERROR,
                 'Connectivity failed, check the server name and API key.\n')
-            self.append_to_message('Test Connectivity failed.\n')
-            return self.get_status()
+            action_result.append_to_message('Test Connectivity failed.\n')
+            return action_result.get_status()
 
         if (phantom.is_fail(ret_val)):
-            self.append_to_message('Test Connectivity Failed')
-            return self.get_status()
+            action_result.append_to_message('Test Connectivity Failed')
+            return action_result.get_status()
 
-        return self.set_status_save_progress(
+        return action_result.set_status(
             phantom.APP_SUCCESS, 'Test Connectivity Passed')
 
     def _normalize_into_list(self, input_dict, key):
@@ -342,7 +537,7 @@ class A1000Connector(BaseConnector):
             method='post',
             additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
 
-        if summary_data is not None and len(summary_data) > 0 and 'count' in summary_data and summary_data['count'] > 0:
+        if summary_data is not None and 'count' in summary_data and summary_data['count'] > 0:
             summary_data = summary_data['results'][0]
             if "story" in ticore_response:
                 summary_data["story"] = ticore_response["story"]
@@ -383,7 +578,7 @@ class A1000Connector(BaseConnector):
         return tc_metadata_adapter.parse_tc_metadata(ticore_response, threat_hunting_state)
 
     def _fetch_tc_report(self, sample_sha1):
-        endpoint = self._base_url + '/api/samples/{}/ticore/'.format(sample_sha1)
+        endpoint = '{}/api/samples/{}/ticore/'.format(self._base_url, sample_sha1)
         config = self.get_config()
         response = requests.get(endpoint,
                                 timeout=10,
@@ -394,7 +589,7 @@ class A1000Connector(BaseConnector):
         return response.json()
 
     def _make_local_file_reputation_request(self, hash_values):
-        endpoint = self._base_url + '/api/samples/list/details/'
+        endpoint = '{}/api/samples/list/details/'.format(self._base_url)
         post_data = {
             'hash_values': hash_values,
             'fields': A1000_SAMPLE_DETAILS,
@@ -416,11 +611,16 @@ class A1000Connector(BaseConnector):
         config = self.get_config()
 
         timeout = config[A1000_JSON_POLL_TIMEOUT_MINS]
+        ret_val, timeout = self._validate_integer(
+            action_result, timeout, "timeout"
+        )
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
 
         if (not timeout):
             timeout = A1000_MAX_TIMEOUT_DEF
 
-        max_polling_attempts = (int(timeout) * 60) / A1000_SLEEP_SECS
+        max_polling_attempts = (timeout * 60) / A1000_SLEEP_SECS
 
         data = {'hash_values': [task_id]}
 
@@ -439,17 +639,17 @@ class A1000Connector(BaseConnector):
                 additional_succ_codes={404: A1000_MSG_REPORT_PENDING})
 
             if (phantom.is_fail(ret_val)):
-                return (action_result.get_status(), None)
+                return (action_result.get_status())
 
             # if results not processed postpone
             if ("results" in response and len(response["results"]) > 0):
-                if response["results"][0]["status"] != "processed":
+                if response["results"][0].get("status") != "processed":
                     time.sleep(A1000_SLEEP_SECS)
                     continue
                 else:
                     return True
 
-        self.save_progress("Reached max polling attempts.")
+        self.save_progress("Reached max polling attempts")
         return False
 
         # return (action_result.set_status(phantom.APP_ERROR,A1000_MSG_MAX_POLLS_REACHED),None)
@@ -460,28 +660,9 @@ class A1000Connector(BaseConnector):
 
         task_id = param[A1000_JSON_VAULT_ID]
 
-        # Now poll for the result
-        try:
-            ticloud, ticore, hunting_meta, summary_data = self._check_detonated_report(task_id, action_result)
-        except:
-            action_result.add_data({"test": "fail"})
-
-        # ret_val, response = self._poll_task_status(task_id, action_result)
-
-        try:
-            action_result.add_data(ticloud)
-        except:
-            action_result.add_data({"ticloud": "result not found"})
-        try:
-            action_result.add_data(ticore)
-        except:
-            action_result.add_data({"ticore": "result not found"})
-
-        try:
-            hunting_meta_vault_id = self._store_threat_hunting_state(hunting_meta)
-            self._update_threat_hunting_state(action_result, hunting_meta, hunting_meta_vault_id)
-        except:
-            action_result.add_data({A1000_JSON_HUNTING_STATE: 'does not exist'})
+        ret_val = self.add_report(action_result, task_id)
+        if (phantom.is_fail(ret_val)):
+            return action_result.get_status()
 
         # action_result.set_summary(summary)
         # The next part is the report
@@ -491,7 +672,7 @@ class A1000Connector(BaseConnector):
 
         # action_result.update_summary({A1000_JSON_MALWARE: malware})
 
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully performed get report")
 
     def _reanalyze_file(self, param):
 
@@ -547,28 +728,70 @@ class A1000Connector(BaseConnector):
         sha256 = None
         metadata = None
 
-        success, msg, files_array = ph_rules.vault_info(vault_id=vault_id)
-        file = list(files_array)[0]
-        metadata = file['metadata']
+        try:
+            success, msg, files_array = ph_rules.vault_info(vault_id=vault_id)
+            if not success:
+                return action_result.set_status(phantom.APP_ERROR,
+                            f'Unable to get Vault item details. Error Details: {msg}'), None
+            file = list(files_array)[0]
+            metadata = file['metadata']
+        except BaseException:
+            return action_result.set_status(
+                    phantom.APP_ERROR,
+                    'File not found in vault ("{}")'.format(vault_id)), None
 
         try:
             sha256 = metadata['sha256']
         except Exception as e:
-            self.debug_print('Handled exception', e)
+            self.debug_print('Handled exception {}'.format(self._get_error_message_from_exception(e)))
             return (
                 action_result.set_status(
                     phantom.APP_ERROR,
-                    "Unable to get meta info of vault file" + str(metadata)),
+                    "Unable to get meta info of vault file {}".format(metadata)),
                 None)
 
         return (phantom.APP_SUCCESS, sha256)
+
+    def add_report(self, action_result, task_id, threat_hunting_state=None):
+        # Add the report
+        try:
+            # Now poll for the result
+            try:
+                ticloud, ticore, hunting_meta, summary_data = self._check_detonated_report(
+                    task_id, action_result, threat_hunting_state)
+            except Exception:
+                action_result.add_data({"test0": "fail"})
+
+            # ret_val, response = self._poll_task_status(task_id, action_result)
+
+            if ticloud["ticloud"]:
+                action_result.add_data(ticloud)
+            else:
+                action_result.add_data({"ticloud": "result not found"})
+            if ticore["ticore"][0]:
+                action_result.add_data(ticore)
+            else:
+                action_result.add_data({"ticore": "result not found"})
+            if hunting_meta:
+                hunting_meta_vault_id = self._store_threat_hunting_state(hunting_meta)
+                self._update_threat_hunting_state(action_result, hunting_meta, hunting_meta_vault_id)
+            else:
+                action_result.add_data({A1000_JSON_HUNTING_STATE: 'does not exist'})
+                return action_result.set_status(phantom.APP_ERROR, "Could not execute the action. No data found.")
+
+        except BaseException:
+            return action_result.set_status(phantom.APP_ERROR, "Failed to update data stage 2")
+        return phantom.APP_SUCCESS
 
     def _detonate_file(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         ret_val, files = self._get_file_dict(param, action_result)
 
-        threat_hunting_state, vault_id = self._get_threat_hunting_state(param)
+        if (phantom.is_fail(ret_val)):
+            return action_result.get_status()
+
+        ret_val, threat_hunting_state, vault_id = self._get_threat_hunting_state(param, action_result)
 
         if (phantom.is_fail(ret_val)):
             return action_result.get_status()
@@ -581,10 +804,14 @@ class A1000Connector(BaseConnector):
             return action_result.get_status()
 
         data = action_result.add_data({})
-        self.save_progress('Checking for prior detonations for' + vault_id + ' sha256 ' + sha256)
+        self.save_progress('Checking for prior detonations for {} sha256 {}'.format(vault_id, sha256))
 
-        # check if there is existing report already
-        ticloud, ticore, hunting_meta, summary_data = self._check_detonated_report(vault_id, action_result, threat_hunting_state)
+        try:
+            # check if there is existing report already
+            ticloud, ticore, hunting_meta, summary_data = self._check_detonated_report(vault_id, action_result, threat_hunting_state)
+        except Exception as e:
+            err = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, err)
 
         # report does not exist yet
         if ticloud["ticloud"] == "Report Not Found" or ticore["ticore"] == "Report Not Found":
@@ -598,7 +825,7 @@ class A1000Connector(BaseConnector):
                 method='post', filein=files['file'][1])
 
             if (phantom.is_fail(ret_val)):
-                return self.get_status()
+                return action_result.get_status()
 
             # get the sha1
             task_id = response.get('sha1')
@@ -609,15 +836,23 @@ class A1000Connector(BaseConnector):
             finished = self._poll_task_status(task_id, action_result)
 
             if not finished:
-                ticloud, ticore, hunting_meta, summary_data = self._check_detonated_report(
-                    task_id, action_result, threat_hunting_state)
+                try:
+                    ticloud, ticore, hunting_meta, summary_data = self._check_detonated_report(
+                        task_id, action_result, threat_hunting_state)
+                except Exception as e:
+                    err = self._get_error_message_from_exception(e)
+                    return action_result.set_status(phantom.APP_ERROR, err)
 
                 if ticloud is not None:
                     data["ticloud"] = ticloud
                 if ticore is not None:
                     data["ticore"] = ticore
                 if hunting_meta is not None:
-                    hunting_meta_vault_id = self._store_threat_hunting_state(hunting_meta)
+                    try:
+                        hunting_meta_vault_id = self._store_threat_hunting_state(hunting_meta)
+                    except Exception as e:
+                        err = self._get_error_message_from_exception(e)
+                        return action_result.set_status(phantom.APP_ERROR, err)
                     self._update_threat_hunting_state(action_result, hunting_meta, hunting_meta_vault_id)
 
                 data.update(data)
@@ -626,13 +861,17 @@ class A1000Connector(BaseConnector):
             try:
                 polling_attempt = 0
                 max_polling_attempts = 10
-                ticloud, ticore, hunting_meta, summary_data = self._check_detonated_report(
-                    sha256, action_result, threat_hunting_state)
-                while (polling_attempt < max_polling_attempts and summary_data["threat_status"] == "unknown"):
+                try:
                     ticloud, ticore, hunting_meta, summary_data = self._check_detonated_report(
-                        task_id, action_result, threat_hunting_state)
-                    polling_attempt += 1
-                    time.sleep(1)
+                        sha256, action_result, threat_hunting_state)
+                    while (polling_attempt < max_polling_attempts and summary_data["threat_status"] == "unknown"):
+                        ticloud, ticore, hunting_meta, summary_data = self._check_detonated_report(
+                            task_id, action_result, threat_hunting_state)
+                        polling_attempt += 1
+                        time.sleep(1)
+                except Exception as e:
+                    err = self._get_error_message_from_exception(e)
+                    return action_result.set_status(phantom.APP_ERROR, err)
 
                 data = {"ticore": ticore, "ticloud": ticloud}
                 data.update(data)
@@ -640,63 +879,53 @@ class A1000Connector(BaseConnector):
                 hunting_meta_vault_id = self._store_threat_hunting_state(hunting_meta)
                 self._update_threat_hunting_state(action_result, hunting_meta, hunting_meta_vault_id)
             except Exception as e:
-                self.debug_print('Handled exception', e)
+                self.debug_print('Handled exception {}'.format(self._get_error_message_from_exception(e)))
                 return (action_result.set_status(
                         phantom.APP_ERROR,
-                        "Unable to get meta info of vault file"),
-                        None)
+                        "Unable to get meta info of vault file"))
 
             if (phantom.is_fail(ret_val)):
                 return action_result.get_status()
 
-        # Add the report
-        polling_attempt = 0
-        max_polling_attempts = 10
-        try:
-            # Now poll for the result
-            try:
-                ticloud, ticore, hunting_meta, summary_data = self._check_detonated_report(
-                    sha256, action_result, threat_hunting_state)
-            except:
-                action_result.add_data({"test0": "fail"})
+        ret_val = self.add_report(action_result, sha256, threat_hunting_state)
+        if (phantom.is_fail(ret_val)):
+            return action_result.get_status()
 
-            # ret_val, response = self._poll_task_status(task_id, action_result)
-
-            try:
-                action_result.add_data(ticloud)
-            except:
-                action_result.add_data({"ticloud": "result not found"})
-            try:
-                action_result.add_data(ticore)
-            except:
-                action_result.add_data({"ticore": "result not found"})
-            try:
-                hunting_meta_vault_id = self._store_threat_hunting_state(hunting_meta)
-                self._update_threat_hunting_state(action_result, hunting_meta, hunting_meta_vault_id)
-            except:
-                action_result.add_data({A1000_JSON_HUNTING_STATE: 'does not exist'})
-
-        except BaseException:
-            return action_result.set_status(phantom.APP_ERROR, "failed to update data stage 2")
-            # error
-
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully detonated the file")
 
     def _local_advanced_search(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        hunting_report, vault_id = self._get_threat_hunting_state(param)
+        ret_val, hunting_report, vault_id = self._get_threat_hunting_state(param, action_result)
+        if (phantom.is_fail(ret_val)):
+            return action_result.get_status()
+
         single_search_term = param.get(A1000_ADV_SEARCH)
         results_per_page = param.get("results_per_page")
+        ret_val, results_per_page = self._validate_integer(
+            action_result, results_per_page, "results_per_page"
+        )
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
         page_number = param.get("page_number")
+        ret_val, results_per_page = self._validate_integer(
+            action_result, page_number, "page_number"
+        )
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
 
-        if hunting_report:
-            self._hunting_with_advanced_search(action_result, hunting_report, vault_id)
-        elif single_search_term:
-            self._advanced_search_make_single_query(action_result, single_search_term, results_per_page, page_number)
-        else:
-            raise ApplicationExecutionFailed('No parameters provided. At least one is needed.')
-
+        try:
+            if hunting_report:
+                self._hunting_with_advanced_search(action_result, hunting_report, vault_id)
+            elif single_search_term:
+               self._advanced_search_make_single_query(action_result, single_search_term, results_per_page, page_number)
+            else:
+                return action_result.set_status(phantom.APP_ERROR,
+                "Please provide either '{}' or '{}'".format(A1000_JSON_HUNTING_STATE, A1000_ADV_SEARCH))
+        except Exception as e:
+            err = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, err)
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _hunting_with_advanced_search(self, action_result, hunting_report, vault_id):
@@ -738,7 +967,8 @@ class A1000Connector(BaseConnector):
 
     def _advanced_search_make_single_query(self, action_result, search_term, results_per_page, page_number):
         api_data = self._make_search_api_request(search_term, results_per_page, page_number)
-        action_result.add_data(api_data)
+        if api_data:
+            action_result.add_data(api_data)
 
     def _make_search_api_request(self, search_term, results_per_page, page_number):
         config = self.get_config()
@@ -758,15 +988,23 @@ class A1000Connector(BaseConnector):
         response.raise_for_status()
 
     @staticmethod
-    def _get_threat_hunting_state(parameters):
+    def _get_threat_hunting_state(parameters, action_result):
         hunting_report_vault_id = parameters.get(A1000_JSON_HUNTING_STATE)
         if hunting_report_vault_id:
-            success, msg, files_array = ph_rules.vault_info(vault_id=hunting_report_vault_id)
-            file_data = list(files_array)[0]
-            payload = open(file_data['path'], 'rb').read()
-            return json.loads(payload), hunting_report_vault_id
+            try:
+                success, msg, files_array = ph_rules.vault_info(vault_id=hunting_report_vault_id)
+                if not success:
+                    return action_result.set_status(phantom.APP_ERROR,
+                        f'Unable to get Vault item details. Error Details: {msg}'), None, None
+                file_data = list(files_array)[0]
+                payload = open(file_data['path'], 'rb').read()
+                return phantom.APP_SUCCESS, json.loads(payload), hunting_report_vault_id
 
-        return None, None
+            except BaseException:
+                return action_result.set_status(
+                    phantom.APP_ERROR,
+                    'File not found in vault ("{}")'.format(hunting_report_vault_id)), None, None
+        return phantom.APP_SUCCESS, None, None
 
     def _store_threat_hunting_state(self, hunting_meta):
         container_id = self.get_container_id()
@@ -777,7 +1015,7 @@ class A1000Connector(BaseConnector):
         if success:
             return vault_id
         else:
-            raise VaultError('Storing threat hunting report failed: ' + message)
+            raise VaultError('Storing threat hunting report failed: {}'.format(message))
 
     def _create_hunting_report_name(self):
         product_name = self._get_product_name()
@@ -839,7 +1077,7 @@ if __name__ == '__main__':
 
     if (len(sys.argv) < 2):
         print("No test json specified as input")
-        exit(0)
+        sys.exit(0)
 
     with open(sys.argv[1]) as f:
         in_json = f.read()
@@ -852,4 +1090,4 @@ if __name__ == '__main__':
         ret_val = connector._handle_action(injson, None)
         print(json.dumps(json.loads(ret_val), indent=4))
 
-    exit(0)
+    sys.exit(0)

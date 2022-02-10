@@ -37,6 +37,10 @@ A1000_SLEEP_SECS = 3
 A1000_MSG_REPORT_PENDING = "Report Not Found"
 A1000_MSG_MAX_POLLS_REACHED = """Reached max polling attempts.
 Please use the MD5 or Sha256 of the file as a parameter to <b>get report</b> to query the report status."""
+# Constants relating to error messages
+A1000_ERR_EMPTY_RESPONSE = "Status Code {code}. Empty response and no information in the header."
+A1000_UNABLE_TO_PARSE_ERR_DETAIL = "Cannot parse error details"
+A1000_ERR_UNABLE_TO_PARSE_JSON_RESPONSE = "Unable to parse response as JSON. {error}"
 A1000_PARAM_LIST = {
     "fields": [
         "file_type",
@@ -73,3 +77,10 @@ A1000_SAMPLE_DETAILS = [
     'local_first_seen',
     'local_last_seen',
 ]
+
+# Constants relating to 'validate_integer'
+A1000_VALID_INT_MSG = "Please provide a valid integer value in the '{param}' action parameter"
+A1000_NON_NEG_INT_MSG = "Please provide a valid non-negative integer value in the '{param}' action parameter"
+
+# Constants relating to 'get_error_message_from_exception'
+ERR_MSG_UNAVAILABLE = "Error message unavailable. Please check the asset configuration and|or action parameters."

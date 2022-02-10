@@ -1,2 +1,4 @@
+beautifulsoup4==4.9.1
 python-magic==0.4.18
+python_rl_threat_hunting==1.588
 requests==2.25.0
