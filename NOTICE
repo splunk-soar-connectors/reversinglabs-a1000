@@ -15,8 +15,7 @@ Kenneth Reitz
 
 Library: python_rl_threat_hunting
 Version: 1.588
-License: Apache 2.0
-Kenneth Reitz
+License: MIT
 
 Library: beautifulsoup4
 Version: 4.9.1
