@@ -15,7 +15,6 @@
 #
 
 # Phantom imports
-# from jwt import PyJWKClient
 import phantom.app as phantom
 import phantom.rules as ph_rules
 from phantom.app import ActionResult, BaseConnector
@@ -408,7 +407,7 @@ class A1000Connector(BaseConnector):
 
         if (r.status_code in additional_succ_codes):
             response = additional_succ_codes[r.status_code]
-            return phantom.APP_SUCCESS, response if response is not None else r.text
+            return phantom.APP_SUCCESS, response
 
         if (not parse_response):
             return phantom.APP_SUCCESS, r
@@ -430,7 +429,8 @@ class A1000Connector(BaseConnector):
                         f'Unable to get Vault item details. Error Details: {msg}'),
                         None)
             file_data = list(files_array)[0]
-            payload = open(file_data['path'], 'rb').read()
+            with open(file_data['path'], 'rb') as f:
+                payload = f.read()
 
         except BaseException:
             return (
@@ -454,7 +454,8 @@ class A1000Connector(BaseConnector):
         filepath = "{}/{}".format(dirpath, filename)
 
         try:
-            payload = open(filepath, 'rb')
+            with open(filepath, 'rb') as payload:
+                pass
         except BaseException:
             action_result.set_status(phantom.APP_ERROR,
                             'Test pdf file not found at "{}"'.format(filepath))
@@ -471,8 +472,8 @@ class A1000Connector(BaseConnector):
         except BaseException:
             action_result.set_status(
                 phantom.APP_ERROR,
-                'Connectivity failed, check the server name and API key.\n')
-            action_result.append_to_message('Test Connectivity failed.\n')
+                'Connectivity failed, check the server name and API key.')
+            action_result.append_to_message('Test Connectivity failed.')
             return action_result.get_status()
 
         if (phantom.is_fail(ret_val)):
@@ -909,7 +910,7 @@ class A1000Connector(BaseConnector):
             return action_result.get_status()
 
         page_number = param.get("page_number")
-        ret_val, results_per_page = self._validate_integer(
+        ret_val, page_number = self._validate_integer(
             action_result, page_number, "page_number"
         )
         if phantom.is_fail(ret_val):
@@ -997,7 +998,8 @@ class A1000Connector(BaseConnector):
                     return action_result.set_status(phantom.APP_ERROR,
                         f'Unable to get Vault item details. Error Details: {msg}'), None, None
                 file_data = list(files_array)[0]
-                payload = open(file_data['path'], 'rb').read()
+                with open(file_data['path'], 'rb') as f:
+                    payload = f.read()
                 return phantom.APP_SUCCESS, json.loads(payload), hunting_report_vault_id
 
             except BaseException:

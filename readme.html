@@ -44,6 +44,15 @@ The "API Key" contains the the authentication token obtained from an A1000 insta
 The "Detonate timeout" variable defines how long the app should wait for the results from the A1000 appliance.
 </p>
 
+<p><b>Playbook Backward Compatibility</b>
+	<ul>
+		<li>A new action is added as given below. Hence, it is requested to the end-user to please update their existing playbooks by re-inserting the corresponding action blocks or by providing appropriate values to these action parameters to ensure the correct functioning of the playbooks created on the earlier versions of the app.</li>
+		<ul>
+			<li>Local Advanced Search - Added a new action. The action will query A1000 instance with a specified Advanced Search query.</li>
+		</ul>
+	</ul>
+</p>
+
 <h2>Port Information</h2>
 <p>
 	The app uses HTTP/ HTTPS protocol for communicating with the RL A1000 Malware Analysis Appliance server. Below are the default ports used by the Splunk SOAR Connector.

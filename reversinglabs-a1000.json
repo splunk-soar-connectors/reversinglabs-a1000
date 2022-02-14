@@ -17,6 +17,7 @@
     "logo_dark": "logo_reversinglabs_dark.svg",
     "license": "Copyright (c) 2016-2022 Splunk Inc.",
     "python_version": "3",
+    "fips_compliant": false,
     "pip_dependencies": {
         "wheel": [
             {

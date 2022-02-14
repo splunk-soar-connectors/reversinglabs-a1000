@@ -12,3 +12,15 @@ Library: requests
 Version: 2.25.0
 License: Apache 2.0
 Kenneth Reitz
+
+Library: python_rl_threat_hunting
+Version: 1.588
+License: Apache 2.0
+Kenneth Reitz
+
+Library: beautifulsoup4
+Version: 4.9.1
+License: MIT
+Copyright 2018 Isaac Muse
+Copyright 2004-2019 Leonard Richardson
+Copyright 2004-2017 Leonard Richardson
