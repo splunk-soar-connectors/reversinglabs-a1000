@@ -140,7 +140,11 @@
                 "file_name": {
                     "description": "Filename to use",
                     "data_type": "string",
-                    "order": 1
+                    "order": 1,
+                    "primary": true,
+                    "contains": [
+                        "file name"
+                    ]
                 },
                 "hunting_report_vault_id": {
                     "description": "Threat hunting report vault id",
@@ -162,7 +166,10 @@
             "output": [
                 {
                     "data_path": "action_result.parameter.file_name",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "contains": [
+                        "file name"
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.file_vault_id",
@@ -215,11 +222,11 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.summary",
+                    "data_path": "action_result.message",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.message",
+                    "data_path": "action_result.summary",
                     "data_type": "string"
                 },
                 {
@@ -263,7 +270,11 @@
                 "file_name": {
                     "description": "Filename to use",
                     "data_type": "string",
-                    "order": 1
+                    "order": 1,
+                    "primary": true,
+                    "contains": [
+                        "file name"
+                    ]
                 }
             },
             "render": {
@@ -276,7 +287,10 @@
             "output": [
                 {
                     "data_path": "action_result.parameter.file_name",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "contains": [
+                        "file name"
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.file_vault_id",
@@ -298,6 +312,10 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
                     "data_path": "action_result.summary",
                     "data_type": "string"
                 },
@@ -306,13 +324,9 @@
                     "data_type": "string",
                     "example_values": [
                         "File not found and could not be queued for analysis",
-                        "Sample is queued for analysis.",
+                        "Sample is queued for analysis",
                         "Sample is already queued for analysis"
                     ]
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
                 },
                 {
                     "data_path": "summary.total_objects",
@@ -355,7 +369,11 @@
                 "file_name": {
                     "description": "Filename to use",
                     "data_type": "string",
-                    "order": 1
+                    "order": 1,
+                    "primary": true,
+                    "contains": [
+                        "file name"
+                    ]
                 },
                 "hunting_report_vault_id": {
                     "description": "Threat hunting report vault id",
@@ -377,7 +395,10 @@
             "output": [
                 {
                     "data_path": "action_result.parameter.file_name",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "contains": [
+                        "file name"
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.file_vault_id",
@@ -433,11 +454,11 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.summary",
+                    "data_path": "action_result.message",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.message",
+                    "data_path": "action_result.summary",
                     "data_type": "string"
                 },
                 {
@@ -474,14 +495,16 @@
                     "order": 0
                 },
                 "results_per_page": {
-                    "description": "Number of results per one page - default:1000",
+                    "description": "Number of results per one page (Default:1000)",
                     "data_type": "numeric",
-                    "order": 1
+                    "order": 1,
+                    "default": 1000
                 },
                 "page_number": {
-                    "description": "Page number - default:1",
+                    "description": "Page number (Default:1)",
                     "data_type": "numeric",
-                    "order": 2
+                    "order": 2,
+                    "default": 1
                 },
                 "hunting_report_vault_id": {
                     "description": "Threat hunting report vault id",
@@ -503,11 +526,17 @@
                 },
                 {
                     "data_path": "action_result.parameter.page_number",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.results_per_page",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": [
+                        1000
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.search_parameter",
@@ -553,11 +582,11 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.summary",
+                    "data_path": "action_result.message",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.message",
+                    "data_path": "action_result.summary",
                     "data_type": "string"
                 },
                 {

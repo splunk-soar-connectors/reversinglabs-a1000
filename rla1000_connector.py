@@ -454,8 +454,7 @@ class A1000Connector(BaseConnector):
         filepath = "{}/{}".format(dirpath, filename)
 
         try:
-            with open(filepath, 'rb') as payload:
-                pass
+            payload = open(filepath, 'rb')
         except BaseException:
             action_result.set_status(phantom.APP_ERROR,
                             'Test pdf file not found at "{}"'.format(filepath))
@@ -467,13 +466,14 @@ class A1000Connector(BaseConnector):
                 'Detonating test pdf file for checking connectivity')
             files = payload
             ret_val, response = self._make_rest_call(
-                '/api/uploads/', self, self.FILE_UPLOAD_ERROR_DESC,
+                '/api/uploads/', action_result, self.FILE_UPLOAD_ERROR_DESC,
                 method='post', filein=files)
+            payload.close()
         except BaseException:
             action_result.set_status(
                 phantom.APP_ERROR,
                 'Connectivity failed, check the server name and API key.')
-            action_result.append_to_message('Test Connectivity failed.')
+            action_result.append_to_message('Test Connectivity Failed.')
             return action_result.get_status()
 
         if (phantom.is_fail(ret_val)):
@@ -673,7 +673,7 @@ class A1000Connector(BaseConnector):
 
         # action_result.update_summary({A1000_JSON_MALWARE: malware})
 
-        return action_result.set_status(phantom.APP_SUCCESS, "Successfully performed get report")
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully executed the get report action")
 
     def _reanalyze_file(self, param):
 
@@ -892,7 +892,7 @@ class A1000Connector(BaseConnector):
         if (phantom.is_fail(ret_val)):
             return action_result.get_status()
 
-        return action_result.set_status(phantom.APP_SUCCESS, "Successfully detonated the file")
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully executed the detonate file action")
 
     def _local_advanced_search(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
@@ -927,7 +927,7 @@ class A1000Connector(BaseConnector):
         except Exception as e:
             err = self._get_error_message_from_exception(e)
             return action_result.set_status(phantom.APP_ERROR, err)
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully executed the local advanced search action")
 
     def _hunting_with_advanced_search(self, action_result, hunting_report, vault_id):
         search_tasks = local.get_query_tasks(hunting_report)

@@ -29,7 +29,7 @@ The A1000 makes it easy to upload multiple samples for analysis. It can process,
 <br/><br/>
 The A1000 relies on several threat classification methods, including YARA rules and ReversingLabs hashing algorithm (RHA) that classifies files based on their functional similarity.
 <br/><br/>
-For more information, consult the <a href="https://www.reversinglabs.com/products/malware-analysis-appliance.html"> official product website.</a>
+For more information, consult the <a href="https://www.reversinglabs.com/products/malware-analysis-appliance.html" target="_blank"> official product website.</a>
 </p>
 <h2>How to Configure the App</h2>
 <p>
@@ -39,14 +39,14 @@ Access the Asset Settings tab on the Asset Configuration page. The variables des
 <br/><br/><br/>
 The "Base URL" field requires the host address of the A1000 appliance. Select the "Verify server certificate" checkbox to allow only commercial certificates, not the self-signed certificates.
 <br/><br/><br/>
-The "API Key" contains the the authentication token obtained from an A1000 instance used for accessing the A1000 REST API.
+The "API Key" contains the authentication token obtained from an A1000 instance used for accessing the A1000 REST API.
 <br/><br/><br/>
 The "Detonate timeout" variable defines how long the app should wait for the results from the A1000 appliance.
 </p>
 
 <p><b>Playbook Backward Compatibility</b>
 	<ul>
-		<li>A new action is added as given below. Hence, it is requested to the end-user to please update their existing playbooks by re-inserting the corresponding action blocks or by providing appropriate values to these action parameters to ensure the correct functioning of the playbooks created on the earlier versions of the app.</li>
+		<li>New action is added as given below. Hence, it is requested to the end-user to please update their existing playbooks by re-inserting the corresponding action blocks or by providing appropriate values to these action parameters to ensure the correct functioning of the playbooks created on the earlier versions of the app.</li>
 		<ul>
 			<li>Local Advanced Search - Added a new action. The action will query A1000 instance with a specified Advanced Search query.</li>
 		</ul>
