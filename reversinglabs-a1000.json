@@ -176,6 +176,9 @@
                     "data_type": "string",
                     "contains": [
                         "vault id"
+                    ],
+                    "example_values":[
+                        "67fa9c7f27f23587ec7e5873fc62fac8f3a8c52f"
                     ]
                 },
                 {
@@ -183,11 +186,17 @@
                     "data_type": "string",
                     "contains": [
                         "vault id"
+                    ],
+                    "example_values":[
+                        "67fa9c7f27f23587ec7e5873fc62fac8f3a8c52f"
                     ]
                 },
                 {
                     "data_path": "action_result.data.*.hunting_report_vault_id",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "example_values":[
+                        "67fa9c7f27f23587ec7e5873fc62fac8f3a8c52f"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.readable_summary.classification.classification",
@@ -223,7 +232,10 @@
                 },
                 {
                     "data_path": "action_result.message",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "example_values":[
+                        "Successfully executed the detonate file action"
+                    ]
                 },
                 {
                     "data_path": "action_result.summary",
@@ -297,6 +309,9 @@
                     "data_type": "string",
                     "contains": [
                         "vault id"
+                    ],
+                    "example_values":[
+                        "67fa9c7f27f23587ec7e5873fc62fac8f3a8c52f"
                     ]
                 },
                 {
@@ -313,10 +328,6 @@
                 },
                 {
                     "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary",
                     "data_type": "string"
                 },
                 {
@@ -405,6 +416,9 @@
                     "data_type": "string",
                     "contains": [
                         "vault id"
+                    ],
+                    "example_values":[
+                        "67fa9c7f27f23587ec7e5873fc62fac8f3a8c52f"
                     ]
                 },
                 {
@@ -412,6 +426,9 @@
                     "data_type": "string",
                     "contains": [
                         "vault id"
+                    ],
+                    "example_values":[
+                        "67fa9c7f27f23587ec7e5873fc62fac8f3a8c52f"
                     ]
                 },
                 {
@@ -419,6 +436,9 @@
                     "data_type": "string",
                     "contains": [
                         "vault id"
+                    ],
+                    "example_values":[
+                        "67fa9c7f27f23587ec7e5873fc62fac8f3a8c52f"
                     ]
                 },
                 {
@@ -455,7 +475,10 @@
                 },
                 {
                     "data_path": "action_result.message",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "example_values": [
+                        "Successfully executed the get report action"
+                    ]
                 },
                 {
                     "data_path": "action_result.summary",
@@ -522,6 +545,9 @@
                     "data_type": "string",
                     "contains": [
                         "vault id"
+                    ],
+                    "example_values":[
+                        "67fa9c7f27f23587ec7e5873fc62fac8f3a8c52f"
                     ]
                 },
                 {
@@ -547,6 +573,9 @@
                     "data_type": "string",
                     "contains": [
                         "vault id"
+                    ],
+                    "example_values":[
+                        "67fa9c7f27f23587ec7e5873fc62fac8f3a8c52f"
                     ]
                 },
                 {
@@ -583,7 +612,10 @@
                 },
                 {
                     "data_path": "action_result.message",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "example_values": [
+                        "Successfully executed the local advanced search action"
+                    ]
                 },
                 {
                     "data_path": "action_result.summary",
@@ -610,7 +642,7 @@
                 "width": 10,
                 "height": 5,
                 "view": "reversinglabs_view.hunting_visualization",
-                "title": "FILE REPUTATION"
+                "title": "File Reputation"
             }
         }
     ],

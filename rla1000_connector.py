@@ -769,7 +769,7 @@ class A1000Connector(BaseConnector):
                 action_result.add_data(ticloud)
             else:
                 action_result.add_data({"ticloud": "result not found"})
-            if ticore["ticore"][0]:
+            if ticore["ticore"][0] or ticore["ticore"][1]:
                 action_result.add_data(ticore)
             else:
                 action_result.add_data({"ticore": "result not found"})
@@ -778,7 +778,6 @@ class A1000Connector(BaseConnector):
                 self._update_threat_hunting_state(action_result, hunting_meta, hunting_meta_vault_id)
             else:
                 action_result.add_data({A1000_JSON_HUNTING_STATE: 'does not exist'})
-                return action_result.set_status(phantom.APP_ERROR, "Could not execute the action. No data found.")
 
         except BaseException:
             return action_result.set_status(phantom.APP_ERROR, "Failed to update data stage 2")
