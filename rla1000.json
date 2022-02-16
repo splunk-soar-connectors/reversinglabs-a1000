@@ -13,8 +13,8 @@
     "min_phantom_version": "5.1.0",
     "publisher": "ReversingLabs",
     "consolidate_widgets": true,
-    "logo": "logo_reversinglabs.svg",
-    "logo_dark": "logo_reversinglabs_dark.svg",
+    "logo": "logo_rla1000.svg",
+    "logo_dark": "logo_rla1000_dark.svg",
     "license": "Copyright (c) 2016-2022 Splunk Inc.",
     "python_version": "3",
     "fips_compliant": false,
@@ -160,7 +160,7 @@
                 "type": "custom",
                 "width": 10,
                 "height": 5,
-                "view": "reversinglabs_view.hunting_visualization",
+                "view": "rla1000_view.hunting_visualization",
                 "title": "A1000 Upload Status"
             },
             "output": [
@@ -293,7 +293,7 @@
                 "type": "custom",
                 "width": 10,
                 "height": 5,
-                "view": "reversinglabs_view.hunting_visualization",
+                "view": "rla1000_view.hunting_visualization",
                 "title": "A1000 Upload Status"
             },
             "output": [
@@ -400,7 +400,7 @@
                 "type": "custom",
                 "width": 10,
                 "height": 5,
-                "view": "reversinglabs_view.hunting_visualization",
+                "view": "rla1000_view.hunting_visualization",
                 "title": "A1000 Upload Status"
             },
             "output": [
@@ -641,7 +641,7 @@
                 "type": "custom",
                 "width": 10,
                 "height": 5,
-                "view": "reversinglabs_view.hunting_visualization",
+                "view": "rla1000_view.hunting_visualization",
                 "title": "File Reputation"
             }
         }

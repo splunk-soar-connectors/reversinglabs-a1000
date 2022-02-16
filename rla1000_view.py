@@ -1,4 +1,4 @@
-# File: reversinglabs_view.py
+# File: rla1000_view.py
 #
 # Copyright (c) 2016-2022 Splunk Inc.
 #
@@ -74,7 +74,7 @@ def hunting_visualization(provides, all_results, context):
         context['title_color'] = 'white'
     except:
         pass
-    return 'reversinglabs_template.html'
+    return 'rla1000_template.html'
 
 
 def organise_data_for_frontend(cloud_hunting):
