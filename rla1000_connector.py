@@ -30,6 +30,7 @@ import json
 import os
 import re
 import time
+from urllib.parse import unquote
 
 # import xmltodict
 import requests
@@ -389,7 +390,7 @@ class A1000Connector(BaseConnector):
                     'User-Agent': 'ReversingLabs Phantom A1000 v2.2'})
             except Exception as e:
                 err = self._get_error_message_from_exception(e)
-                return result.set_status(phantom.APP_ERROR, "REST Api to server failed {}".format(err)), None
+                return result.set_status(phantom.APP_ERROR, "REST Api to server failed {}".format(unquote(err))), None
         else:
             try:
                 r = requests.get(
@@ -399,7 +400,7 @@ class A1000Connector(BaseConnector):
                     headers={'Authorization': 'Token %s' % config[A1000_JSON_API_KEY], 'User-Agent': 'ReversingLabs Phantom A1000 v2.2'})
             except Exception as e:
                 err = self._get_error_message_from_exception(e)
-                return result.set_status(phantom.APP_ERROR, "REST Api to server failed {}".format(err)), None
+                return result.set_status(phantom.APP_ERROR, "REST Api to server failed {}".format(unquote(err))), None
 
         # It's ok if r.text is None, dump that
         if (hasattr(result, 'add_debug_data')):
