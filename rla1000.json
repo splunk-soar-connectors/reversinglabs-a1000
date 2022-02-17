@@ -194,6 +194,9 @@
                 {
                     "data_path": "action_result.data.*.hunting_report_vault_id",
                     "data_type": "string",
+                    "contains": [
+                        "vault id"
+                    ],
                     "example_values":[
                         "67fa9c7f27f23587ec7e5873fc62fac8f3a8c52f"
                     ]
@@ -359,7 +362,7 @@
         {
             "action": "get report",
             "description": "Get A1000 report for file",
-            "verbose": "This action requries hash to get report from A1000.",
+            "verbose": "This action requires hash to get report from A1000.",
             "type": "investigate",
             "identifier": "get_report",
             "read_only": true,
