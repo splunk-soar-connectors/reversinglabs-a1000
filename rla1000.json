@@ -15,7 +15,7 @@
     "consolidate_widgets": true,
     "logo": "logo_rla1000.svg",
     "logo_dark": "logo_rla1000_dark.svg",
-    "license": "Copyright (c) 2016-2022 Splunk Inc.",
+    "license": "Copyright (c) ReversingLabs Inc 2016-2022",
     "python_version": "3",
     "fips_compliant": false,
     "pip_dependencies": {

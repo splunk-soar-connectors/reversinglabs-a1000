@@ -12,7 +12,7 @@ This app integrates with ReversingLabs A1000 Advanced Malware Analysis appliance
 
 [comment]: # " File: README.md"
 [comment]: # ""
-[comment]: # "  Copyright (c) 2016-2022 Splunk Inc."
+[comment]: # "  Copyright (c) ReversingLabs Inc 2016-2022"
 [comment]: # ""
 [comment]: # "  Licensed under the Apache License, Version 2.0 (the \"License\");"
 [comment]: # "  you may not use this file except in compliance with the License."
